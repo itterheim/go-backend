@@ -1,0 +1,6 @@
+-- To keep track of migrations
+CREATE TABLE migrations (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    version VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
