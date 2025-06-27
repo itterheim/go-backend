@@ -18,7 +18,7 @@ An exploration of
 ## Folder structure
 
 - `cmd/api` - API server
-- `cmd/migrations` - migrations
+- `cmd/migrations` - migrations:which
 - `config` - YAML configuration files
 - `internal`
 - `migrations` - SQL files for migrations
@@ -31,13 +31,14 @@ An exploration of
 
 - `/migrations/00000000-00-functions.sql`
     - most of the tables should have an `created` and `updated` colums
-    - currently just one resable function that handle updates of the `updated` column
+    - currently there is just one reusable function that handles updates of the `updated` column
 - `/migrations/00000000-01-auth.sql`
     - there are two entities which can access the Rest API `users` and `devices`
     - `users`
         - they use JWT auth and refresh tokens
         - http only cookies
         - standard login with username and password
+        - TODO: scope/role/permissions
     - `tokens`
         - registry of user refresh tokens (its JTI and expiration)
         - for blacklisting
@@ -50,5 +51,5 @@ An exploration of
             1. device will register its identification
             2. user will approve the device
             3. long lived refresh token is generated
-            4. device has one chance to retrieve its
-            5. then it is the standard access/refresh procedure
+            4. device has one chance to retrieve this token
+            5. then it's the standard access/refresh procedure
