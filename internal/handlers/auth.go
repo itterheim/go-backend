@@ -1,0 +1,161 @@
+package handlers
+
+import (
+	"backend/internal/auth"
+	"backend/internal/config"
+	"backend/pkg/handler"
+	"net/http"
+)
+
+type AuthHandler struct {
+	*handler.BaseHandler
+
+	config  *config.AuthConfig
+	service *auth.AuthService
+}
+
+func NewAuthHandler(service *auth.AuthService, config *config.AuthConfig) *AuthHandler {
+	return &AuthHandler{
+		config:  config,
+		service: service,
+	}
+}
+
+func (h *AuthHandler) RegisterRoutes(r *http.ServeMux, auth func(http.Handler) http.Handler) {
+	r.Handle("POST /auth", http.HandlerFunc(h.Login))
+	r.Handle("DELETE /auth", http.HandlerFunc(h.Logout))
+	r.Handle("GET /auth", auth(http.HandlerFunc(h.Validate)))
+	r.Handle("POST /auth/refresh", http.HandlerFunc(h.Refresh))
+}
+
+// func (h *AuthHandler) CreateRouter(auth func(http.Handler) http.Handler) *http.ServeMux {
+// 	mux := http.NewServeMux()
+
+// 	mux.Handle("/", http.HandlerFunc(h.Teapot))
+// 	mux.Handle("DELETE /{$}", http.HandlerFunc(h.Logout))
+// 	mux.Handle("POST {$}", http.HandlerFunc(h.Login))
+// 	mux.Handle("GET /{$}", auth(http.HandlerFunc(h.Validate)))
+// 	mux.Handle("POST /refresh", http.HandlerFunc(h.Refresh))
+
+// 	return mux
+// }
+
+func (h *AuthHandler) Teapot(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusTeapot)
+}
+
+func (h *AuthHandler) Validate(w http.ResponseWriter, r *http.Request) {
+	claims, err := h.GetClaimsFromContext(r)
+	if err != nil {
+		h.SendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	responseData := map[string]any{
+		"id":   claims.ID,
+		"type": claims.Type,
+	}
+
+	h.SendJSON(w, http.StatusOK, responseData)
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// Get the username and password from the request body
+	type LoginRequestData struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var loginRequest LoginRequestData
+	err := h.ParseJSON(r, &loginRequest)
+	if err != nil {
+		h.removeCookies(w)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	refreshToken, accessToken, err := h.service.Login(loginRequest.Username, loginRequest.Password)
+	if err != nil {
+		h.removeCookies(w)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	h.setCookies(w, refreshToken, accessToken)
+
+	// Send a response
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	h.removeCookies(w)
+
+	// Send a response
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	// Get the refresh token from the cookie
+	cookie, err := r.Cookie("refresh")
+	if err != nil {
+		http.Error(w, "no refresh token found", http.StatusUnauthorized)
+		return
+	}
+
+	refreshToken, accessToken, err := h.service.ValidateRefreshToken(cookie.Value)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// h.removeCookies(w)
+
+	h.setCookies(w, refreshToken, accessToken)
+
+	// Send a response
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AuthHandler) setCookies(w http.ResponseWriter, refreshToken, accessToken string) {
+	refreshCookie := &http.Cookie{
+		Name:     "refresh",
+		Value:    refreshToken,
+		HttpOnly: true,
+		Secure:   h.config.Secure,
+		SameSite: http.SameSiteNoneMode,
+		Path:     "/auth/refresh",
+	}
+	http.SetCookie(w, refreshCookie)
+
+	// Create an authentication cookie
+	accessCookie := &http.Cookie{
+		Name:     "access",
+		Value:    accessToken,
+		HttpOnly: true,
+		Secure:   h.config.Secure,
+		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
+	}
+	http.SetCookie(w, accessCookie)
+}
+
+func (h *AuthHandler) removeCookies(w http.ResponseWriter) {
+	expiredCookie := &http.Cookie{
+		Name:     "refresh",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   h.config.Secure,
+		Path:     "/auth/refresh",
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, expiredCookie)
+
+	expiredCookie = &http.Cookie{
+		Name:     "access",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   h.config.Secure,
+		Path:     "/",
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, expiredCookie)
+}
