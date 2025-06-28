@@ -16,16 +16,23 @@ func NewEnviHandler(repo *repositories.Envi) *EnviHandler {
 	return &EnviHandler{repo: repo}
 }
 
-func (h *EnviHandler) CreateRouter() *http.ServeMux {
-	r := http.NewServeMux()
-
-	r.HandleFunc("GET /{$}", h.GetEnvi)
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-	})
-
-	return r
+func (h *EnviHandler) GetRoutes() []handler.Route {
+	return []handler.Route{
+		handler.NewRoute("GET /envi/{$}", h.GetEnvi, false, nil),
+		handler.NewRoute("GET /envi/public/{$}", h.GetEnviPublic, true, nil),
+	}
 }
+
+// func (h *EnviHandler) CreateRouter() *http.ServeMux {
+// 	r := http.NewServeMux()
+
+// 	r.HandleFunc("GET /{$}", h.GetEnvi)
+// 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+// 		w.WriteHeader(http.StatusNotFound)
+// 	})
+
+// 	return r
+// }
 
 func (h *EnviHandler) GetEnvi(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
@@ -35,4 +42,8 @@ func (h *EnviHandler) GetEnvi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.SendJSON(w, http.StatusOK, claims.ID)
+}
+
+func (h *EnviHandler) GetEnviPublic(w http.ResponseWriter, r *http.Request) {
+	h.SendJSON(w, http.StatusOK, "/envi/public")
 }

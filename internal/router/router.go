@@ -5,6 +5,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/handlers"
 	"backend/internal/repositories"
+	"backend/pkg/handler"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,8 +28,15 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	// var notesHandler handler.Handler = notes.NewNotesHandler()
 	// r.Handle("/notes/", http.StripPrefix("/notes", authMiddleware(notesHandler.CreateRouter())))
 
-	// enviRepo := repositories.NewEnviRepository(db)
-	// var enviHandler handler.Handler = handlers.NewEnviHandler(enviRepo)
+	enviRepo := repositories.NewEnviRepository(db)
+	var enviHandler handler.Handler = handlers.NewEnviHandler(enviRepo)
+	for _, route := range enviHandler.GetRoutes() {
+		if route.Public {
+			r.Handle(route.Pattern, route.HandlerFunc)
+		} else {
+			r.Handle(route.Pattern, authMiddleware(route.HandlerFunc))
+		}
+	}
 	// r.Handle("/envi/", http.StripPrefix("/envi", enviHandler.CreateRouter()))
 
 	return r
