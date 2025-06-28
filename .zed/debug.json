@@ -1,0 +1,36 @@
+[
+    {
+        "label": "Launch API",
+        "adapter": "Delve",
+        "mode": "debug",
+        "request": "launch",
+        "program": "$ZED_WORKTREE_ROOT/cmd/api"
+        // "program": "${workspaceFolder}/cmd/api"
+    },
+    {
+        "label": "Migrate",
+        "adapter": "Delve",
+        "request": "launch",
+        "mode": "debug",
+        "program": "$ZED_WORKTREE_ROOT/cmd/migrate",
+        "args": ["--config", "./config/", "--migrations", "./migrations/"]
+    },
+    {
+        "label": "Migrate - nuke",
+        "adapter": "Delve",
+        "request": "launch",
+        "mode": "debug",
+        "program": "$ZED_WORKTREE_ROOT/cmd/migrate",
+        "args": [
+            "--config",
+            "./config/",
+            "--migrations",
+            "./migrations/",
+            "--username",
+            "insertyourusername",
+            "--password",
+            "insertyourpassword",
+            "--nuke"
+        ]
+    }
+]
