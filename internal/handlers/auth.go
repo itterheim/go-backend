@@ -21,27 +21,13 @@ func NewAuthHandler(service *auth.AuthService, config *config.AuthConfig) *AuthH
 	}
 }
 
-func (h *AuthHandler) RegisterRoutes(r *http.ServeMux, auth func(http.Handler) http.Handler) {
-	r.Handle("POST /auth", http.HandlerFunc(h.Login))
-	r.Handle("DELETE /auth", http.HandlerFunc(h.Logout))
-	r.Handle("GET /auth", auth(http.HandlerFunc(h.Validate)))
-	r.Handle("POST /auth/refresh", http.HandlerFunc(h.Refresh))
-}
-
-// func (h *AuthHandler) CreateRouter(auth func(http.Handler) http.Handler) *http.ServeMux {
-// 	mux := http.NewServeMux()
-
-// 	mux.Handle("/", http.HandlerFunc(h.Teapot))
-// 	mux.Handle("DELETE /{$}", http.HandlerFunc(h.Logout))
-// 	mux.Handle("POST {$}", http.HandlerFunc(h.Login))
-// 	mux.Handle("GET /{$}", auth(http.HandlerFunc(h.Validate)))
-// 	mux.Handle("POST /refresh", http.HandlerFunc(h.Refresh))
-
-// 	return mux
-// }
-
-func (h *AuthHandler) Teapot(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusTeapot)
+func (h *AuthHandler) GetRoutes() []handler.Route {
+	return []handler.Route{
+		handler.NewRoute("POST /auth", h.Login, true, nil),
+		handler.NewRoute("DELETE /auth", h.Logout, false, nil),
+		handler.NewRoute("GET /auth", h.Validate, false, nil),
+		handler.NewRoute("POST /auth/refresh", h.Refresh, true, nil),
+	}
 }
 
 func (h *AuthHandler) Validate(w http.ResponseWriter, r *http.Request) {

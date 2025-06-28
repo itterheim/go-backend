@@ -14,15 +14,17 @@ import (
 func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	r := http.NewServeMux()
 
+	routes := make([]handler.Route, 0)
+
 	tokenRepo := repositories.NewTokenRepository(db)
 	userRepo := repositories.NewUserRepository(db)
 	deviceRepo := repositories.NewDeviceRepository(db)
 
 	authService := auth.NewAuthService(userRepo, deviceRepo, tokenRepo, config.JWTSecret)
 	authMiddleware := auth.GetAuthMiddleware(authService)
-	authHandler := handlers.NewAuthHandler(authService, config)
+	var authHandler handler.Handler = handlers.NewAuthHandler(authService, config)
+	routes = append(routes, authHandler.GetRoutes()...)
 
-	authHandler.RegisterRoutes(r, authMiddleware)
 	// r.Handle("/auth/", http.StripPrefix("/auth", authHandler.CreateRouter(authMiddleware)))
 
 	// var notesHandler handler.Handler = notes.NewNotesHandler()
@@ -30,7 +32,9 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 
 	enviRepo := repositories.NewEnviRepository(db)
 	var enviHandler handler.Handler = handlers.NewEnviHandler(enviRepo)
-	for _, route := range enviHandler.GetRoutes() {
+	routes = append(routes, enviHandler.GetRoutes()...)
+
+	for _, route := range routes {
 		if route.Public {
 			r.Handle(route.Pattern, route.HandlerFunc)
 		} else {

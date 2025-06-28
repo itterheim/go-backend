@@ -16,7 +16,7 @@ func GetAuthMiddleware(authService *AuthService) func(http.Handler) http.Handler
 			claims, err := authenticate(r, authService)
 			if err != nil {
 				fmt.Println(err)
-				http.Error(w, err.Error(), http.StatusUnauthorized)
+				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
@@ -30,16 +30,6 @@ func GetAuthMiddleware(authService *AuthService) func(http.Handler) http.Handler
 }
 
 func authenticate(r *http.Request, authService *AuthService) (auth.Claims, error) {
-	// GET /auth is public
-	if r.URL.Path == "/auth" && r.Method == http.MethodPost {
-		return auth.Claims{}, nil
-	}
-
-	// GET /auth/refresh is public, validation is done id the handler
-	if r.URL.Path == "/auth/refresh" && r.Method == http.MethodGet {
-		return auth.Claims{}, nil
-	}
-
 	claims, err := authenticateWithCookie(r, authService)
 	if err != nil {
 		claims, err = authenticateWithBearer(r, authService)

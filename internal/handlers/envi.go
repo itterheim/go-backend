@@ -23,17 +23,6 @@ func (h *EnviHandler) GetRoutes() []handler.Route {
 	}
 }
 
-// func (h *EnviHandler) CreateRouter() *http.ServeMux {
-// 	r := http.NewServeMux()
-
-// 	r.HandleFunc("GET /{$}", h.GetEnvi)
-// 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-// 		w.WriteHeader(http.StatusNotFound)
-// 	})
-
-// 	return r
-// }
-
 func (h *EnviHandler) GetEnvi(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
