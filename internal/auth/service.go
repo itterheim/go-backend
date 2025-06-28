@@ -5,6 +5,7 @@ import (
 	"backend/internal/repositories"
 	"backend/pkg/auth"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -62,7 +63,13 @@ func (s *AuthService) ValidateToken(receivedToken string) (auth.Claims, error) {
 		return auth.Claims{}, errors.New("invalid token")
 	}
 
-	return s.parseClaims(jwtClaims)
+	claims, err := s.parseClaims(jwtClaims)
+	if err != nil {
+		fmt.Println(err)
+		return auth.Claims{}, err
+	}
+
+	return claims, nil
 }
 
 func (s *AuthService) ValidateRefreshToken(token string) (string, string, error) {
@@ -150,10 +157,11 @@ func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (auth.Claims, error) 
 	claims.Expiration = time.Unix(int64(expiration), 0)
 
 	// get user ID
-	claims.ID, ok = jwtClaims["sub"].(int64)
+	id, ok := jwtClaims["sub"].(float64)
 	if !ok {
 		return auth.Claims{}, errors.New("invalid user ID")
 	}
+	claims.ID = int64(id)
 
 	// get JTI
 	claims.JTI, ok = jwtClaims["jti"].(string)
@@ -162,12 +170,16 @@ func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (auth.Claims, error) 
 	}
 
 	// get Type
-	claims.Type, ok = jwtClaims["type"].(auth.ClaimType)
-	if !ok || (claims.Type != auth.UserClaim && claims.Type != auth.DeviceClaim) {
+	claimType, ok := jwtClaims["type"].(string)
+	if !ok {
+		return auth.Claims{}, errors.New("failed to parse claim type")
+	}
+	claims.Type = auth.ClaimType(claimType)
+	if claims.Type != auth.UserClaim && claims.Type != auth.DeviceClaim {
 		return auth.Claims{}, errors.New("invalid Type")
 	}
 
-	return claims, errors.New("not implemented")
+	return claims, nil
 }
 
 func (s *AuthService) createClaims(id int64, claimType auth.ClaimType) auth.Claims {
@@ -177,7 +189,7 @@ func (s *AuthService) createClaims(id int64, claimType auth.ClaimType) auth.Clai
 	return auth.Claims{
 		ID:         id,
 		JTI:        jti,
-		Type:       auth.UserClaim,
+		Type:       claimType,
 		Expiration: expiration,
 	}
 }

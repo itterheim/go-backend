@@ -3,6 +3,7 @@ package repositories
 import (
 	"backend/internal/models"
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,10 +26,12 @@ func (r *User) GetByUsername(username string) (*models.User, error) {
 		WHERE username = $1
 	`, username).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password)
 	if err == pgx.ErrNoRows {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 

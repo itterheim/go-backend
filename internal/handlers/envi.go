@@ -30,7 +30,7 @@ func (h *EnviHandler) CreateRouter() *http.ServeMux {
 func (h *EnviHandler) GetEnvi(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
-		h.RespondWithBadRequest(w, err)
+		h.SendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
