@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"backend/pkg/auth"
 	"backend/pkg/handler"
+	"backend/pkg/jwt"
 	"context"
 	"errors"
 	"fmt"
@@ -29,7 +29,7 @@ func GetAuthMiddleware(authService *AuthService) func(http.Handler) http.Handler
 	}
 }
 
-func authenticate(r *http.Request, authService *AuthService) (auth.Claims, error) {
+func authenticate(r *http.Request, authService *AuthService) (jwt.Claims, error) {
 	claims, err := authenticateWithCookie(r, authService)
 	if err != nil {
 		claims, err = authenticateWithBearer(r, authService)
@@ -39,29 +39,29 @@ func authenticate(r *http.Request, authService *AuthService) (auth.Claims, error
 	return claims, err
 }
 
-func authenticateWithCookie(r *http.Request, authService *AuthService) (auth.Claims, error) {
+func authenticateWithCookie(r *http.Request, authService *AuthService) (jwt.Claims, error) {
 	cookie, err := r.Cookie("access")
 	if err != nil {
-		return auth.Claims{}, err
+		return jwt.Claims{}, err
 	}
 
 	// Check if the cookie is valid
 	claims, err := authService.ValidateToken(cookie.Value)
 	if err != nil {
-		return auth.Claims{}, err
+		return jwt.Claims{}, err
 	}
 
 	return claims, nil
 }
 
-func authenticateWithBearer(r *http.Request, authService *AuthService) (auth.Claims, error) {
+func authenticateWithBearer(r *http.Request, authService *AuthService) (jwt.Claims, error) {
 	header := r.Header.Get("Authorization")
 	if len(header) == 0 {
-		return auth.Claims{}, errors.New("Missing Authorization header")
+		return jwt.Claims{}, errors.New("Missing Authorization header")
 	}
 
 	if !strings.HasPrefix(header, "Bearer ") {
-		return auth.Claims{}, errors.New("Invalid token")
+		return jwt.Claims{}, errors.New("Invalid token")
 	}
 
 	token := strings.TrimPrefix(header, "Bearer ")

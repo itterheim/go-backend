@@ -3,6 +3,9 @@ package repositories
 import (
 	"backend/internal/models"
 	"context"
+	"errors"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,7 +28,8 @@ func (r *Device) GetById(id int64) (*models.Device, error) {
 		WHERE username = $1
 	`, id).Scan(&device.ID, &device.Created, &device.Updated, &device.Name, &device.Description, &device.Expiration)
 	if err == pgx.ErrNoRows {
-		return nil, err
+		fmt.Println("Device repository: ", err)
+		return nil, nil
 	}
 
 	if err != nil {
@@ -73,4 +77,19 @@ func (r *Device) List() ([]models.Device, error) {
 	}
 
 	return devices, nil
+}
+
+func (r *Device) UpdateToken(deviceId int64, jti string, expiration time.Time) error {
+	commandTag, err := r.db.Exec(context.Background(), `
+		UPDATE devices
+		SET jti = $2, expiration = $3
+		WHERE id = $1
+	`, deviceId, jti, expiration)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("UpdateToken: no rows updated")
+	}
+	return nil
 }

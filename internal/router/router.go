@@ -5,6 +5,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/handlers"
 	"backend/internal/repositories"
+	"backend/internal/services"
 	"backend/pkg/handler"
 	"net/http"
 
@@ -20,16 +21,18 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	userRepo := repositories.NewUserRepository(db)
 	deviceRepo := repositories.NewDeviceRepository(db)
 
+	// auth
 	authService := auth.NewAuthService(userRepo, deviceRepo, tokenRepo, config.JWTSecret)
 	authMiddleware := auth.GetAuthMiddleware(authService)
 	var authHandler handler.Handler = handlers.NewAuthHandler(authService, config)
 	routes = append(routes, authHandler.GetRoutes()...)
 
-	// r.Handle("/auth/", http.StripPrefix("/auth", authHandler.CreateRouter(authMiddleware)))
+	// device
+	deviceService := services.NewDeviceService(deviceRepo, authService)
+	var deviceHandler handler.Handler = handlers.NewDeviceHandler(deviceService)
+	routes = append(routes, deviceHandler.GetRoutes()...)
 
-	// var notesHandler handler.Handler = notes.NewNotesHandler()
-	// r.Handle("/notes/", http.StripPrefix("/notes", authMiddleware(notesHandler.CreateRouter())))
-
+	// envi
 	enviRepo := repositories.NewEnviRepository(db)
 	var enviHandler handler.Handler = handlers.NewEnviHandler(enviRepo)
 	routes = append(routes, enviHandler.GetRoutes()...)

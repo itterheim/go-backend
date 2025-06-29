@@ -3,7 +3,7 @@ package auth
 import (
 	"backend/internal/models"
 	"backend/internal/repositories"
-	"backend/pkg/auth"
+	jwt1 "backend/pkg/jwt"
 	"errors"
 	"fmt"
 	"time"
@@ -40,11 +40,11 @@ func (s *AuthService) Login(username, password string) (string, string, error) {
 	}
 
 	// create new tokens
-	claims := s.createClaims(user.ID, auth.UserClaim)
+	claims := s.createClaims(user.ID, jwt1.UserClaim)
 	return s.createJWTTokens(claims)
 }
 
-func (s *AuthService) ValidateToken(receivedToken string) (auth.Claims, error) {
+func (s *AuthService) ValidateToken(receivedToken string) (jwt1.Claims, error) {
 	// parse token
 	token, err := jwt.Parse(receivedToken, func(jwtToken *jwt.Token) (any, error) {
 		// validate signing method
@@ -55,18 +55,18 @@ func (s *AuthService) ValidateToken(receivedToken string) (auth.Claims, error) {
 		return []byte(s.jwtSecret), nil
 	})
 	if err != nil {
-		return auth.Claims{}, err
+		return jwt1.Claims{}, err
 	}
 
 	jwtClaims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return auth.Claims{}, errors.New("invalid token")
+		return jwt1.Claims{}, errors.New("invalid token")
 	}
 
 	claims, err := s.parseClaims(jwtClaims)
 	if err != nil {
 		fmt.Println(err)
-		return auth.Claims{}, err
+		return jwt1.Claims{}, err
 	}
 
 	return claims, nil
@@ -104,7 +104,7 @@ func (s *AuthService) ValidateRefreshToken(token string) (string, string, error)
 	return refresh, access, nil
 }
 
-func (s *AuthService) createJWTToken(claims auth.Claims) (string, error) {
+func (s *AuthService) CreateJWTToken(claims jwt1.Claims) (string, error) {
 	// generate JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":  claims.ID,
@@ -121,8 +121,8 @@ func (s *AuthService) createJWTToken(claims auth.Claims) (string, error) {
 	return tokenString, nil
 }
 
-func (s *AuthService) createJWTTokens(claims auth.Claims) (refreshToken string, accessToken string, err error) {
-	refreshToken, err = s.createJWTToken(claims)
+func (s *AuthService) createJWTTokens(claims jwt1.Claims) (refreshToken string, accessToken string, err error) {
+	refreshToken, err = s.CreateJWTToken(claims)
 	if err != nil {
 		return "", "", err
 	}
@@ -138,7 +138,7 @@ func (s *AuthService) createJWTTokens(claims auth.Claims) (refreshToken string, 
 
 	// generate new JWT access token
 	accessClaims := s.createClaims(claims.ID, claims.Type)
-	accessToken, err = s.createJWTToken(accessClaims)
+	accessToken, err = s.CreateJWTToken(accessClaims)
 	if err != nil {
 		return "", "", err
 	}
@@ -146,47 +146,47 @@ func (s *AuthService) createJWTTokens(claims auth.Claims) (refreshToken string, 
 	return refreshToken, accessToken, nil
 }
 
-func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (auth.Claims, error) {
-	claims := auth.Claims{}
+func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (jwt1.Claims, error) {
+	claims := jwt1.Claims{}
 
 	// check expiration
 	expiration, ok := jwtClaims["exp"].(float64)
 	if !ok {
-		return auth.Claims{}, errors.New("invalid expiration")
+		return jwt1.Claims{}, errors.New("invalid expiration")
 	}
 	claims.Expiration = time.Unix(int64(expiration), 0)
 
 	// get user ID
 	id, ok := jwtClaims["sub"].(float64)
 	if !ok {
-		return auth.Claims{}, errors.New("invalid user ID")
+		return jwt1.Claims{}, errors.New("invalid user ID")
 	}
 	claims.ID = int64(id)
 
 	// get JTI
 	claims.JTI, ok = jwtClaims["jti"].(string)
 	if !ok {
-		return auth.Claims{}, errors.New("invalid JTI")
+		return jwt1.Claims{}, errors.New("invalid JTI")
 	}
 
 	// get Type
 	claimType, ok := jwtClaims["type"].(string)
 	if !ok {
-		return auth.Claims{}, errors.New("failed to parse claim type")
+		return jwt1.Claims{}, errors.New("failed to parse claim type")
 	}
-	claims.Type = auth.ClaimType(claimType)
-	if claims.Type != auth.UserClaim && claims.Type != auth.DeviceClaim {
-		return auth.Claims{}, errors.New("invalid Type")
+	claims.Type = jwt1.ClaimType(claimType)
+	if claims.Type != jwt1.UserClaim && claims.Type != jwt1.DeviceClaim {
+		return jwt1.Claims{}, errors.New("invalid Type")
 	}
 
 	return claims, nil
 }
 
-func (s *AuthService) createClaims(id int64, claimType auth.ClaimType) auth.Claims {
+func (s *AuthService) createClaims(id int64, claimType jwt1.ClaimType) jwt1.Claims {
 	expiration := time.Now().Add(time.Hour * 24)
 	jti := uuid.New().String()
 
-	return auth.Claims{
+	return jwt1.Claims{
 		ID:         id,
 		JTI:        jti,
 		Type:       claimType,
