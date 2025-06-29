@@ -54,6 +54,38 @@ func (r *Device) Create(name, description string) (*models.Device, error) {
 	return device, err
 }
 
+func (r *Device) Update(data *models.Device) (*models.Device, error) {
+	device := &models.Device{}
+
+	err := r.db.QueryRow(context.Background(), `
+		UPDATE devices
+		SET name = $2, description = $3
+		WHERE id = $1
+		RETURNING id, created, updated, name, description
+	`, data.ID, data.Name, data.Description).Scan(&device.ID, &device.Created, &device.Updated, &device.Name, &device.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return device, err
+}
+
+func (r *Device) Delete(deviceId int64) error {
+	commandTag, err := r.db.Exec(context.Background(), `
+		DELETE FROM device
+		WHERE id = $1
+	`, deviceId)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("Delete: no rows updated")
+	}
+
+	return nil
+}
+
 func (r *Device) List() ([]models.Device, error) {
 	rows, err := r.db.Query(context.Background(), `
 		SELECT
@@ -90,6 +122,21 @@ func (r *Device) UpdateToken(deviceId int64, jti string, expiration time.Time) e
 	}
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("UpdateToken: no rows updated")
+	}
+	return nil
+}
+
+func (r *Device) RevokeToken(deviceId int64) error {
+	commandTag, err := r.db.Exec(context.Background(), `
+		UPDATE devices
+		SET jti = NULL, expiration = NULL
+		WHERE id = $1
+	`, deviceId)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("RevokeToken: no rows updated")
 	}
 	return nil
 }
