@@ -28,7 +28,7 @@ func (r *Device) GetById(id int64) (*models.Device, error) {
 		WHERE username = $1
 	`, id).Scan(&device.ID, &device.Created, &device.Updated, &device.Name, &device.Description, &device.Expiration)
 	if err == pgx.ErrNoRows {
-		fmt.Println("Device repository: ", err)
+		fmt.Println("Device repository: device not found", err)
 		return nil, nil
 	}
 
