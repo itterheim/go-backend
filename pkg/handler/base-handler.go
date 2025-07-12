@@ -24,19 +24,41 @@ func (h *BaseHandler) GetClaimsFromContext(r *http.Request) (jwt.Claims, error) 
 	return value, nil
 }
 
+func (h *BaseHandler) GetUserClaimsFromContext(r *http.Request) (jwt.Claims, error) {
+	claims, err := h.GetClaimsFromContext(r)
+	if err != nil {
+		return jwt.Claims{}, err
+	}
+
+	if claims.Type == jwt.UserClaim {
+		return claims, nil
+	}
+
+	return jwt.Claims{}, errors.New("jwt claims are not of UserClaim type")
+}
+
+func (h *BaseHandler) GetAuthIdsFromContext(r *http.Request) (int64, *int64, error) {
+	claims, err := h.GetClaimsFromContext(r)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return claims.UserID, claims.ProviderID, nil
+}
+
 // Parse in64 id form the request path
 func (h *BaseHandler) GetInt64FromPath(r *http.Request, key string) (int64, error) {
 	id := r.PathValue("id")
 	if len(id) == 0 {
-		return 0, errors.New("invalid device id")
+		return 0, errors.New("invalid provider id")
 	}
 
-	deviceId, err := strconv.ParseInt(id, 10, 64)
+	providerId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return 0, errors.New("invalid device id")
+		return 0, errors.New("invalid provider id")
 	}
 
-	return deviceId, nil
+	return providerId, nil
 }
 
 // respondWithJSON writes the given data as JSON response with the specified status code.

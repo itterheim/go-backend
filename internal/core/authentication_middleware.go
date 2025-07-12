@@ -1,4 +1,4 @@
-package auth
+package core
 
 import (
 	"backend/pkg/handler"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func GetAuthMiddleware(authService *AuthService) func(http.Handler) http.Handler {
+func GetAuthenticationMiddleware(authService *AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, err := authenticate(r, authService)
@@ -19,6 +19,8 @@ func GetAuthMiddleware(authService *AuthService) func(http.Handler) http.Handler
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+
+			fmt.Println("Authenticate", claims)
 
 			ctx := context.WithValue(r.Context(), handler.RequestClaims, claims)
 			r = r.WithContext(ctx)

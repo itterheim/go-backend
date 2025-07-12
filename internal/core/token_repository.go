@@ -1,24 +1,23 @@
-package repositories
+package core
 
 import (
-	"backend/internal/models"
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Token struct {
+type TokenRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewTokenRepository(db *pgxpool.Pool) *Token {
-	return &Token{
+func NewTokenRepository(db *pgxpool.Pool) *TokenRepository {
+	return &TokenRepository{
 		db: db,
 	}
 }
 
-func (r *Token) Get(jti string) (*models.Token, error) {
-	token := &models.Token{}
+func (r *TokenRepository) Get(jti string) (*Token, error) {
+	token := &Token{}
 	err := r.db.QueryRow(context.Background(), `
 		SELECT
 			id, user_id, jti, created, expiration, blocked
@@ -32,7 +31,7 @@ func (r *Token) Get(jti string) (*models.Token, error) {
 	return token, nil
 }
 
-func (r *Token) Create(token models.Token) error {
+func (r *TokenRepository) Create(token Token) error {
 	err := r.db.QueryRow(context.Background(), `
 		INSERT INTO tokens (user_id, jti, expiration)
 		VALUES ($1, $2, $3)
@@ -42,7 +41,7 @@ func (r *Token) Create(token models.Token) error {
 	return err
 }
 
-func (r *Token) Invalidate(id int64) error {
+func (r *TokenRepository) Invalidate(id int64) error {
 	_, err := r.db.Exec(context.Background(), `
         UPDATE tokens
         SET blocked = TRUE
@@ -52,7 +51,7 @@ func (r *Token) Invalidate(id int64) error {
 	return err
 }
 
-func (r *Token) Delete(jti string) error {
+func (r *TokenRepository) Delete(jti string) error {
 	_, err := r.db.Exec(context.Background(), `
 		DELETE FROM tokens
 		WHERE jti = $1

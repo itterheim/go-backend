@@ -1,6 +1,7 @@
-package models
+package core
 
 import (
+	"backend/pkg/jwt"
 	"fmt"
 	"time"
 
@@ -13,6 +14,7 @@ type User struct {
 	Updated  time.Time
 	Username string
 	Password string
+	Role     jwt.ClaimRole
 }
 
 func (u *User) CheckPassword(password string) bool {
@@ -23,7 +25,7 @@ func (u *User) CheckPassword(password string) bool {
 	return err == nil
 }
 
-func NewUser(username, password string, bcryptCost int) (*User, error) {
+func NewUser(username, password string, role jwt.ClaimRole, bcryptCost int) (*User, error) {
 	now := time.Now()
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	fmt.Println("Password hashing took", time.Since(now))

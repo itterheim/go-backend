@@ -4,7 +4,8 @@ CREATE TABLE users (
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     username TEXT NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    role TEXT NOT NULL
 );
 
 CREATE INDEX users_username_idx ON users (username);
@@ -31,8 +32,8 @@ ALTER TABLE tokens ADD CONSTRAINT fk_tokens_user_id FOREIGN KEY (user_id) REFERE
 CREATE TRIGGER update_tokens_updated BEFORE UPDATE ON tokens
 FOR EACH ROW EXECUTE FUNCTION update_updated_column();
 
--- devices
-CREATE TABLE devices (
+-- providers
+CREATE TABLE providers (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -42,5 +43,5 @@ CREATE TABLE devices (
     expiration TIMESTAMPTZ
 );
 
-CREATE TRIGGER update_devices_updated BEFORE UPDATE ON devices
+CREATE TRIGGER update_providers_updated BEFORE UPDATE ON providers
 FOR EACH ROW EXECUTE FUNCTION update_updated_column();

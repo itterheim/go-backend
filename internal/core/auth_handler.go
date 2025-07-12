@@ -1,7 +1,6 @@
-package handlers
+package core
 
 import (
-	"backend/internal/auth"
 	"backend/internal/config"
 	"backend/pkg/handler"
 	"net/http"
@@ -11,10 +10,10 @@ type AuthHandler struct {
 	*handler.BaseHandler
 
 	config  *config.AuthConfig
-	service *auth.AuthService
+	service *AuthService
 }
 
-func NewAuthHandler(service *auth.AuthService, config *config.AuthConfig) *AuthHandler {
+func NewAuthHandler(service *AuthService, config *config.AuthConfig) *AuthHandler {
 	return &AuthHandler{
 		config:  config,
 		service: service,
@@ -23,10 +22,10 @@ func NewAuthHandler(service *auth.AuthService, config *config.AuthConfig) *AuthH
 
 func (h *AuthHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("POST /auth", h.Login, true, nil),
-		handler.NewRoute("DELETE /auth", h.Logout, false, nil),
-		handler.NewRoute("GET /auth", h.Validate, false, nil),
-		handler.NewRoute("POST /auth/refresh", h.Refresh, true, nil),
+		handler.NewRoute("GET /auth", h.Validate, handler.RouteAuthenticatedRole),
+		handler.NewRoute("POST /auth", h.Login, handler.RoutePublicRole),
+		handler.NewRoute("DELETE /auth", h.Logout, handler.RouteAuthenticatedRole),
+		handler.NewRoute("POST /auth/refresh", h.Refresh, handler.RoutePublicRole),
 	}
 }
 
@@ -37,8 +36,9 @@ func (h *AuthHandler) Validate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseData := map[string]any{
-		"id":   claims.ID,
-		"type": claims.Type,
+		"userId":     claims.UserID,
+		"providerId": claims.ProviderID,
+		"type":       claims.Type,
 	}
 
 	h.SendJSON(w, http.StatusOK, responseData)
@@ -93,8 +93,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// h.removeCookies(w)
-
+	h.removeCookies(w)
 	h.setCookies(w, refreshToken, accessToken)
 
 	// Send a response

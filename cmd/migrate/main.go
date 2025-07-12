@@ -2,10 +2,10 @@ package main
 
 import (
 	"backend/internal/config"
+	"backend/internal/core"
 	"backend/internal/db"
-	"backend/internal/models"
-	"backend/internal/repositories"
 	"backend/pkg/cli"
+	"backend/pkg/jwt"
 	"context"
 	"fmt"
 	"io"
@@ -44,8 +44,6 @@ func main() {
 		fmt.Println("Error loading config:", err)
 		return
 	}
-
-	fmt.Println(cfg)
 
 	// connect to the database
 	conn, err := db.ConnectPgx(cfg)
@@ -100,7 +98,7 @@ func main() {
 		fmt.Println("no default user password defined")
 	}
 
-	err = createUser(conn, username, password, cfg)
+	err = createUser(conn, username, password, jwt.OwnerRole, cfg)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return
@@ -273,21 +271,21 @@ func parseVersion(filename string) (string, error) {
 	return "", fmt.Errorf("invalid filename %s", filename)
 }
 
-func createUser(conn *pgxpool.Pool, username, password string, config *config.Config) error {
-	userRepo := repositories.NewUserRepository(conn)
+func createUser(conn *pgxpool.Pool, username, password string, role jwt.ClaimRole, config *config.Config) error {
+	userRepo := core.NewUserRepository(conn)
 	user, err := userRepo.GetByUsername(username)
 	if user != nil {
 		fmt.Println("User already exists")
 		return nil
 	}
 
-	user, err = models.NewUser(username, password, config.Auth.BCryptCost)
+	user, err = core.NewUser(username, password, role, config.Auth.BCryptCost)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return err
 	}
 
-	user, err = userRepo.Create(user.Username, user.Password)
+	user, err = userRepo.Create(user.Username, user.Password, user.Role)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return err

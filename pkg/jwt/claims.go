@@ -3,14 +3,20 @@ package jwt
 import "time"
 
 type ClaimType string
+type ClaimRole string
 
 const (
-	UserClaim   ClaimType = "user"
-	DeviceClaim ClaimType = "device"
+	UserClaim     ClaimType = "user"
+	ProviderClaim ClaimType = "provider"
+
+	OwnerRole ClaimRole = "owner"
+	GuestRole ClaimRole = "guest"
 )
 
 type Claims struct {
-	ID         int64
+	UserID     int64
+	ProviderID *int64
+	Role       ClaimRole
 	Type       ClaimType
 	Expiration time.Time
 	JTI        string

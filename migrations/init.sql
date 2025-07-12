@@ -4,3 +4,6 @@ CREATE TABLE migrations (
     version VARCHAR(255) NOT NULL,
     timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Initial setup
+CREATE EXTENSION IF NOT EXISTS pg_trgm;

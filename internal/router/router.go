@@ -1,11 +1,9 @@
 package router
 
 import (
-	"backend/internal/auth"
 	"backend/internal/config"
-	"backend/internal/handlers"
-	"backend/internal/repositories"
-	"backend/internal/services"
+	"backend/internal/core"
+	"backend/internal/locations"
 	"backend/pkg/handler"
 	"net/http"
 
@@ -15,36 +13,53 @@ import (
 func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	r := http.NewServeMux()
 
+	fs := http.FileServer(http.Dir("./web"))
+	r.Handle("/", fs)
+
 	routes := make([]handler.Route, 0)
 
-	tokenRepo := repositories.NewTokenRepository(db)
-	userRepo := repositories.NewUserRepository(db)
-	deviceRepo := repositories.NewDeviceRepository(db)
+	// repositories
+	tokenRepo := core.NewTokenRepository(db)
+	userRepo := core.NewUserRepository(db)
+	providerRepo := core.NewProviderRepository(db)
+	eventRepo := core.NewEventRepository(db)
 
 	// auth
-	authService := auth.NewAuthService(userRepo, deviceRepo, tokenRepo, config.JWTSecret)
-	authMiddleware := auth.GetAuthMiddleware(authService)
-	var authHandler handler.Handler = handlers.NewAuthHandler(authService, config)
+	authService := core.NewAuthService(userRepo, providerRepo, tokenRepo, config.JWTSecret)
+	authenticationMiddleware := core.GetAuthenticationMiddleware(authService)
+	authorizationMiddleware := core.GetAuthorizationMiddleware(authService)
+	var authHandler handler.Handler = core.NewAuthHandler(authService, config)
 	routes = append(routes, authHandler.GetRoutes()...)
 
-	// device
-	deviceService := services.NewDeviceService(deviceRepo, authService)
-	var deviceHandler handler.Handler = handlers.NewDeviceHandler(deviceService)
-	routes = append(routes, deviceHandler.GetRoutes()...)
+	// provider
+	providerService := core.NewProviderService(providerRepo, authService)
+	var providerHandler handler.Handler = core.NewProviderHandler(providerService)
+	routes = append(routes, providerHandler.GetRoutes()...)
 
-	// envi
-	enviRepo := repositories.NewEnviRepository(db)
-	var enviHandler handler.Handler = handlers.NewEnviHandler(enviRepo)
-	routes = append(routes, enviHandler.GetRoutes()...)
+	// interval
+	intervalService := core.NewEventService(eventRepo)
+	var intervalHandler handler.Handler = core.NewEventHandler(intervalService)
+	routes = append(routes, intervalHandler.GetRoutes()...)
+
+	// location
+	locationRepository := locations.NewLocationRepository(db)
+	locationService := locations.NewLocationService(locationRepository)
+	var locationHandler handler.Handler = locations.NewLocationHandler(locationService)
+	routes = append(routes, locationHandler.GetRoutes()...)
 
 	for _, route := range routes {
-		if route.Public {
-			r.Handle(route.Pattern, route.HandlerFunc)
-		} else {
-			r.Handle(route.Pattern, authMiddleware(route.HandlerFunc))
+		var handlerFunc http.Handler = route.HandlerFunc
+
+		if route.Role == handler.RouteOwnerRole || route.Role == handler.RouteProviderRole {
+			handlerFunc = authorizationMiddleware(handlerFunc, route.Role)
 		}
+
+		if route.Role != handler.RoutePublicRole {
+			handlerFunc = authenticationMiddleware(handlerFunc)
+		}
+
+		r.Handle(route.Pattern, handlerFunc)
 	}
-	// r.Handle("/envi/", http.StripPrefix("/envi", enviHandler.CreateRouter()))
 
 	return r
 }

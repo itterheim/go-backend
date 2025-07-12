@@ -1,3 +1,5 @@
+DROP EXTENSION IF EXISTS pg_trgm;
+
 DO $$ DECLARE
     r RECORD;
 BEGIN
