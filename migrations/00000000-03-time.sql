@@ -4,11 +4,9 @@ CREATE TABLE events (
     type VARCHAR(20) NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     until TIMESTAMPTZ,
-
     status VARCHAR(20) NOT NULL,
     tags TEXT[],
     note TEXT,
-
     provider_id BIGINT,
     user_id BIGINT NOT NULL
 );
@@ -32,7 +30,7 @@ CREATE TABLE actions (
     reference_id BIGINT,
     tags TEXT[],
     note TEXT
-)
+);
 
 CREATE INDEX actions_event_id_idx ON actions (event_id);
 CREATE INDEX actions_reference_idx ON actions (reference);
