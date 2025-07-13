@@ -37,5 +37,6 @@ func NewUser(username, password string, role jwt.ClaimRole, bcryptCost int) (*Us
 	return &User{
 		Username: username,
 		Password: string(hash),
+		Role:     role,
 	}, nil
 }

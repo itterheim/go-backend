@@ -24,7 +24,7 @@ func (r *UserRepository) GetUser(id int64) (*User, error) {
 			id, created, updated, username, password, role
 		FROM users
 		WHERE id = $1
-	`, user.ID).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password, &user.Role)
+	`, id).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password, &user.Role)
 	if err == pgx.ErrNoRows {
 		fmt.Println(err)
 		return nil, err
