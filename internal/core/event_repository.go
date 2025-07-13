@@ -22,10 +22,11 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 			type,
 			timestamp,
 			until,
+			status,
 			tags,
-			note,
-			status
+			note
 		FROM events
+		ORDER BY timestamp ASC
 	`)
 
 	if err != nil {
@@ -36,7 +37,7 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 	events := make([]Event, 0)
 	for rows.Next() {
 		event := Event{}
-		err = rows.Scan()
+		err = rows.Scan(&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Status, &event.Tags, &event.Note)
 		if err != nil {
 			return nil, err
 		}
@@ -60,9 +61,9 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 		    note,
 		    status
 		FROM events
-		WHERE events.id = $1
+		WHERE id = $1
 	`, id).Scan(
-		&event.ID, &event.Tags,
+		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Status,
 	)
 
 	if err != nil {
