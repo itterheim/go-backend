@@ -48,8 +48,8 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	routes = append(routes, actionHandler.GetRoutes()...)
 
 	// location
-	locationRepository := locations.NewLocationRepository(db)
-	locationService := locations.NewLocationService(locationRepository)
+	locationRepo := locations.NewLocationRepository(db)
+	locationService := locations.NewLocationService(locationRepo, eventRepo, actionRepo)
 	var locationHandler handler.Handler = locations.NewLocationHandler(locationService)
 	routes = append(routes, locationHandler.GetRoutes()...)
 

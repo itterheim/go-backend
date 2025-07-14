@@ -21,15 +21,14 @@ func NewProviderHandler(service *ProviderService) *ProviderHandler {
 
 func (h *ProviderHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /core/provider/{$}", h.GetProviders, handler.RouteOwnerRole),
-		handler.NewRoute("POST /core/provider/{$}", h.CreateProvider, handler.RouteOwnerRole),
+		handler.NewRoute("GET /core/providers/{$}", h.GetProviders, handler.RouteOwnerRole),
+		handler.NewRoute("POST /core/providers/{$}", h.CreateProvider, handler.RouteOwnerRole),
+		handler.NewRoute("GET /core/providers/{id}/{$}", h.GetProvider, handler.RouteOwnerRole),
+		handler.NewRoute("PUT /core/providers/{id}/{$}", h.UpdateProvider, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /core/providers/{id}/{$}", h.DeleteProvider, handler.RouteOwnerRole),
 
-		handler.NewRoute("GET /core/provider/{id}/{$}", h.GetProvider, handler.RouteOwnerRole),
-		handler.NewRoute("PUT /core/provider/{id}/{$}", h.UpdateProvider, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /core/provider/{id}/{$}", h.DeleteProvider, handler.RouteOwnerRole),
-
-		handler.NewRoute("POST /core/provider/{id}/token/{$}", h.CreateToken, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /core/provider/{id}/token/{$}", h.RevokeToken, handler.RouteOwnerRole),
+		handler.NewRoute("POST /core/providers/{id}/token/{$}", h.CreateToken, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /core/providers/{id}/token/{$}", h.RevokeToken, handler.RouteOwnerRole),
 	}
 }
 

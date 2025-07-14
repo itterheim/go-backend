@@ -1,9 +1,17 @@
 package locations
 
+import "backend/internal/core"
+
 type LocationService struct {
-	repo *LocationRepository
+	locationRepo *LocationRepository
+	eventRepo    *core.EventRepository
+	actionRepo   *core.ActionRepository
 }
 
-func NewLocationService(repo *LocationRepository) *LocationService {
-	return &LocationService{repo: repo}
+func NewLocationService(locationRepo *LocationRepository, eventRepo *core.EventRepository, actionRepo *core.ActionRepository) *LocationService {
+	return &LocationService{
+		locationRepo: locationRepo,
+		eventRepo:    eventRepo,
+		actionRepo:   actionRepo,
+	}
 }
