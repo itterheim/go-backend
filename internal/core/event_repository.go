@@ -117,7 +117,7 @@ func (r *EventRepository) UpdateEvent(event *Event) (*Event, error) {
 
 func (r *EventRepository) DeleteEvent(id int64) error {
 	cmd, err := r.db.Exec(context.Background(), `
-		DELETER FORM events
+		DELETE FORM events
 		WHERE id = $1
 	`, id)
 	if err != nil {
