@@ -8,7 +8,6 @@ CREATE TABLE users (
     role TEXT NOT NULL
 );
 
-CREATE INDEX users_username_idx ON users (username);
 CREATE UNIQUE INDEX users_username_unique_idx ON users (username);
 
 CREATE TRIGGER update_users_updated BEFORE UPDATE ON users
