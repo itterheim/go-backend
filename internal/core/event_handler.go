@@ -85,7 +85,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.SendJSON(w, http.StatusOK, result)
+	h.SendJSON(w, http.StatusCreated, result)
 }
 
 func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
