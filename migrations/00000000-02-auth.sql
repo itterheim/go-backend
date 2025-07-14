@@ -42,5 +42,7 @@ CREATE TABLE providers (
     expiration TIMESTAMPTZ
 );
 
+CREATE UNIQUE INDEX providers_unique_idx ON providers (name);
+
 CREATE TRIGGER update_providers_updated BEFORE UPDATE ON providers
 FOR EACH ROW EXECUTE FUNCTION update_updated_column();

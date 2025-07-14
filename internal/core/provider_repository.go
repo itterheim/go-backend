@@ -24,8 +24,15 @@ func (r *ProviderRepository) GetById(id int64) (*Provider, error) {
 		SELECT
 			id, created, updated, name, description, expiration
 		FROM providers
-		WHERE username = $1
-	`, id).Scan(&provider.ID, &provider.Created, &provider.Updated, &provider.Name, &provider.Description, &provider.Expiration)
+		WHERE id = $1
+	`, id).Scan(
+		&provider.ID,
+		&provider.Created,
+		&provider.Updated,
+		&provider.Name,
+		&provider.Description,
+		&provider.Expiration,
+	)
 	if err == pgx.ErrNoRows {
 		fmt.Println("Provider repository: provider not found", err)
 		return nil, nil
@@ -45,7 +52,13 @@ func (r *ProviderRepository) Create(name, description string) (*Provider, error)
 		INSERT INTO providers (name, description)
 		VALUES ($1, $2)
 		RETURNING id, created, updated, name, description
-	`, name, description).Scan(&provider.ID, &provider.Created, &provider.Updated, &provider.Name, &provider.Description)
+	`, name, description).Scan(
+		&provider.ID,
+		&provider.Created,
+		&provider.Updated,
+		&provider.Name,
+		&provider.Description,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +71,17 @@ func (r *ProviderRepository) Update(data *Provider) (*Provider, error) {
 
 	err := r.db.QueryRow(context.Background(), `
 		UPDATE providers
-		SET name = $2, description = $3
+			SET name = $2, description = $3
 		WHERE id = $1
-		RETURNING id, created, updated, name, description
-	`, data.ID, data.Name, data.Description).Scan(&provider.ID, &provider.Created, &provider.Updated, &provider.Name, &provider.Description)
+		RETURNING id, created, updated, name, description, expiration
+	`, data.ID, data.Name, data.Description).Scan(
+		&provider.ID,
+		&provider.Created,
+		&provider.Updated,
+		&provider.Name,
+		&provider.Description,
+		&provider.Expiration,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +120,14 @@ func (r *ProviderRepository) List() ([]Provider, error) {
 	providers := make([]Provider, 0)
 	for rows.Next() {
 		provider := Provider{}
-		err = rows.Scan(&provider.ID, &provider.Created, &provider.Updated, &provider.Name, &provider.Description, &provider.Expiration)
+		err = rows.Scan(
+			&provider.ID,
+			&provider.Created,
+			&provider.Updated,
+			&provider.Name,
+			&provider.Description,
+			&provider.Expiration,
+		)
 		if err != nil {
 			return nil, err
 		}

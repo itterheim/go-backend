@@ -33,15 +33,19 @@ func (s *ProviderService) CreateProvider(name string, description string) (*Prov
 		return nil, errors.New("provider.name cannot be empty")
 	}
 
-	return s.CreateProvider(name, description)
+	return s.providerRepo.Create(name, description)
 }
 
-func (s *ProviderService) UpdateProvider(data *Provider) (*Provider, error) {
-	if len(data.Name) == 0 {
+func (s *ProviderService) UpdateProvider(id int64, name string, description string) (*Provider, error) {
+	if len(name) == 0 {
 		return nil, errors.New("provider.name cannot be empty")
 	}
 
-	return s.providerRepo.Update(data)
+	return s.providerRepo.Update(&Provider{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	})
 }
 
 func (s *ProviderService) DeleteProvider(providerId int64) error {
