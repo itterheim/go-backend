@@ -36,3 +36,5 @@ CREATE INDEX actions_event_id_idx ON actions (event_id);
 CREATE INDEX actions_reference_idx ON actions (reference);
 CREATE INDEX actions_reference_id_idx ON actions (reference_id);
 CREATE INDEX actions_tags_idx ON actions USING GIN(tags);
+
+ALTER TABLE actions ADD CONSTRAINT fk_actions_event_id FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE SET NULL;
