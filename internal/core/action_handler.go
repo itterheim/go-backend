@@ -19,23 +19,23 @@ func NewActionHandler(action *ActionService, event *EventService) *ActionHandler
 func (h *ActionHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
 		handler.NewRoute("GET /core/actions/{$}", h.GetActions, handler.RouteOwnerRole),
-		handler.NewRoute("GET /core/action/{id}", h.GetAction, handler.RouteOwnerRole),
-		handler.NewRoute("PUT /core/action/{id}", h.UpdateAction, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /core/action/{id}", h.DeleteAction, handler.RouteOwnerRole),
-		handler.NewRoute("POST /core/action", h.CreateAction, handler.RouteProviderRole),
+		handler.NewRoute("GET /core/actions/{id}", h.GetAction, handler.RouteOwnerRole),
+		handler.NewRoute("PUT /core/actions/{id}", h.UpdateAction, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /core/actions/{id}", h.DeleteAction, handler.RouteOwnerRole),
+		handler.NewRoute("POST /core/actions", h.CreateAction, handler.RouteProviderRole),
 	}
 }
 
 func (h *ActionHandler) GetActions(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetUserClaimsFromContext(r)
 	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err)
+		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
 	data, err := h.actionService.ListActions(claims.UserID)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -77,28 +77,15 @@ func (h *ActionHandler) UpdateAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data struct {
-		action UpdateActionRequest
-		event  *CreateEventRequest
-	}
+	var data UpdateActionRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, data)
 	}
 
-	if data.event != nil {
-		data.event.UserID = claims.UserID
-		event, err := h.eventService.CreateEvent(data.event)
-		if err != nil {
-			h.SendJSON(w, http.StatusInternalServerError, err)
-			return
-		}
-		data.action.EventID = event.ID
-	}
+	data.ID = actionId
 
-	data.action.ID = actionId
-
-	response, err := h.actionService.UpdateAction(&data.action)
+	response, err := h.actionService.UpdateAction(claims.UserID, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err)
 		return
@@ -132,32 +119,20 @@ func (h *ActionHandler) DeleteAction(w http.ResponseWriter, r *http.Request) {
 func (h *ActionHandler) CreateAction(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetUserClaimsFromContext(r)
 	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err)
+		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
-	var data struct {
-		action CreateActionRequest
-		event  *CreateEventRequest
-	}
-	err = h.ParseJSON(r, &data)
+	var action CreateActionRequest
+	err = h.ParseJSON(r, &action)
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if data.event != nil {
-		data.event.UserID = claims.UserID
-		event, err := h.eventService.CreateEvent(data.event)
-		if err != nil {
-			h.SendJSON(w, http.StatusInternalServerError, err)
-		}
-		data.action.EventID = event.ID
-	}
-
-	result, err := h.actionService.CreateAction(&data.action)
+	result, err := h.actionService.CreateAction(claims.UserID, &action)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

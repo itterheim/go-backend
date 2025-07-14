@@ -59,11 +59,13 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 		    until,
 		    tags,
 		    note,
-		    status
+		    status,
+			user_id,
+			provider_id
 		FROM events
 		WHERE id = $1
 	`, id).Scan(
-		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Status,
+		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Status, &event.UserID, &event.ProviderID,
 	)
 
 	if err != nil {
