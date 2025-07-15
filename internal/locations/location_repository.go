@@ -8,6 +8,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const LocationGPSHistoryTable string = "locations_history"
+const LocationPlacesTable string = "locations_places"
+
 type LocationRepository struct {
 	db *pgxpool.Pool
 }

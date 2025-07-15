@@ -10,14 +10,12 @@ import (
 type LocationService struct {
 	locationRepo *LocationRepository
 	eventRepo    *core.EventRepository
-	actionRepo   *core.ActionRepository
 }
 
-func NewLocationService(locationRepo *LocationRepository, eventRepo *core.EventRepository, actionRepo *core.ActionRepository) *LocationService {
+func NewLocationService(locationRepo *LocationRepository, eventRepo *core.EventRepository) *LocationService {
 	return &LocationService{
 		locationRepo: locationRepo,
 		eventRepo:    eventRepo,
-		actionRepo:   actionRepo,
 	}
 }
 
@@ -41,6 +39,7 @@ func (s *LocationService) RegisterHistory(request *CreateGpsHistoryRequest) (*Gp
 		Status:     core.EventStatusPending,
 		Tags:       request.Tags,
 		Note:       request.Note,
+		Reference:  LocationGPSHistoryTable,
 		ProviderID: request.ProviderID,
 		UserID:     request.UserID,
 	})
@@ -58,24 +57,8 @@ func (s *LocationService) RegisterHistory(request *CreateGpsHistoryRequest) (*Gp
 		return nil, errors.New("LocationService.RegisterHistory: failed to create gps history\n" + err.Error())
 	}
 
-	// create action
-	table := "locations_history"
-	action, err := s.actionRepo.CreateAction(&core.CreateActionRequest{
-		EventID: event.ID,
-		Reference: &core.ActionReference{
-			Table: &table,
-			ID:    &history.ID,
-		},
-		Tags: request.Tags,
-		Note: request.Note,
-	})
-	if err != nil {
-		return nil, errors.New("LocationService.RegisterHistory: failed to create action\n" + err.Error())
-	}
-
 	return &GpsHistoryResponse{
 		Event:     event,
-		Action:    action,
 		Latitude:  history.Latitude,
 		Longitude: history.Longitude,
 		Accuracy:  history.Accuracy,

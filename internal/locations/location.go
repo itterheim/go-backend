@@ -16,7 +16,7 @@ type GpsHistory struct {
 type CreateGpsHistoryRequest struct {
 	Timestamp  time.Time `json:"timestmap"`
 	Tags       []string  `json:"tags"`
-	Note       *string   `json:"note"`
+	Note       string    `json:"note"`
 	Latitude   float64   `json:"latitude"`
 	Longitude  float64   `json:"longitude"`
 	Accuracy   float64   `json:"accuracy"`
@@ -25,10 +25,9 @@ type CreateGpsHistoryRequest struct {
 }
 
 type GpsHistoryResponse struct {
-	Event     *core.Event          `json:"event"`
-	Action    *core.ActionResponse `json:"action"`
-	Latitude  float64              `json:"latitude"`
-	Longitude float64              `json:"longitude"`
-	Accuracy  float64              `json:"accuracy"`
-	Created   time.Time            `json:"created"`
+	Event     *core.Event `json:"event"`
+	Latitude  float64     `json:"latitude"`
+	Longitude float64     `json:"longitude"`
+	Accuracy  float64     `json:"accuracy"`
+	Created   time.Time   `json:"created"`
 }

@@ -112,7 +112,7 @@ func (s *EventService) validateType(eventType EventType) error {
 }
 
 func (s *EventService) validateStatus(status EventStatus) error {
-	if status == EventStatusLocked || status == EventStatusPending {
+	if EventStatuses[status] {
 		return nil
 	}
 	return errors.New("EventService.validateType: invalid status " + string(status))
