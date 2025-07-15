@@ -21,5 +21,19 @@ CREATE INDEX events_reference_idx ON events (reference);
 CREATE INDEX events_user_id_idx ON events (user_id);
 CREATE INDEX events_provider_id_idx ON events (provider_id);
 
-ALTER TABLE events ADD CONSTRAINT fk_events_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL;
+ALTER TABLE events ADD CONSTRAINT fk_events_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 ALTER TABLE events ADD CONSTRAINT fk_events_provider_id FOREIGN KEY (provider_id) REFERENCES providers (id) ON DELETE SET NULL;
+
+-- tags
+CREATE TABLE tags (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    tag TEXT NOT NULL,
+    description TEXT,
+    parent BIGINT,
+    user_id BIGINT NOT NULL
+);
+
+CREATE INDEX tags_tag_trgm ON tags USING GIN(tag gin_trgm_ops);
+CREATE INDEX tags_user_id_idx ON tags (user_id);
+
+ALTER TABLE tags ADD CONSTRAINT fk_tags_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
