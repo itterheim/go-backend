@@ -18,7 +18,7 @@ An exploration of
 ## Folder structure
 
 - `cmd/api` - API server
-- `cmd/migrations` - migrations:which
+- `cmd/migrations` - migrations
 - `config` - YAML configuration files
 - `internal`
 - `migrations` - SQL files for migrations
@@ -26,30 +26,3 @@ An exploration of
 - `pkg/cli` - CLI utilities
 - `pkg/handler` - generic types and utilities for http handlers
 - `pkg/middleware` - useful http middlewares
-
-## Database
-
-- `/migrations/00000000-00-functions.sql`
-    - most of the tables should have an `created` and `updated` colums
-    - currently there is just one reusable function that handles updates of the `updated` column
-- `/migrations/00000000-01-auth.sql`
-    - there are two entities which can access the Rest API `users` and `devices`
-    - `users`
-        - they use JWT auth and refresh tokens
-        - http only cookies
-        - standard login with username and password
-        - TODO: scope/role/permissions
-    - `tokens`
-        - registry of user refresh tokens (its JTI and expiration)
-        - for blacklisting
-    - `devices`
-        - custom ESP32 devices and other services reading and writing data to this API
-        - uses a long lived JWT token in `authorization Bearer ...`
-        - user has to create a device, generate a token
-        - TODO: scope/role/permissions for a specific part of API (environment data, image rendering for eInk display, ...)
-        - TODO: might potentially add support for access and refresh tokens
-            1. device will register its identification
-            2. user will approve the device
-            3. long lived refresh token is generated
-            4. device has one chance to retrieve this token
-            5. then it's the standard access/refresh procedure
