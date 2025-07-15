@@ -1,5 +1,3 @@
-DROP EXTENSION IF EXISTS pg_trgm;
-
 DO $$ DECLARE
     r RECORD;
 BEGIN
@@ -19,12 +17,15 @@ BEGIN
     END LOOP;
 
     -- Drop all functions
-    FOR r IN (SELECT routine_name FROM information_schema.routines WHERE routine_schema = current_schema()) LOOP
-        EXECUTE 'DROP FUNCTION IF EXISTS ' || quote_ident(r.routine_name) || ' CASCADE';
-    END LOOP;
+    -- FOR r IN (SELECT routine_name FROM information_schema.routines WHERE routine_schema = current_schema()) LOOP
+    --     EXECUTE 'DROP FUNCTION IF EXISTS ' || quote_ident(r.routine_name) || ' CASCADE';
+    -- END LOOP;
+    DROP FUNCTION IF EXISTS update_updated_column CASCADE;
 
     -- Drop all types
     FOR r IN (SELECT pg_type.typname FROM pg_type JOIN pg_namespace ON pg_namespace.oid = pg_type.typnamespace WHERE pg_namespace.nspname = current_schema() AND pg_type.typtype = 'c') LOOP
         EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
     END LOOP;
 END $$;
+
+DROP EXTENSION IF EXISTS pg_trgm;
