@@ -28,12 +28,12 @@ func (s *ProviderService) GetProvider(id int64) (*Provider, error) {
 	return s.providerRepo.GetById(id)
 }
 
-func (s *ProviderService) CreateProvider(name string, description string) (*Provider, error) {
+func (s *ProviderService) CreateProvider(userID int64, name string, description string) (*Provider, error) {
 	if len(name) == 0 {
 		return nil, errors.New("provider.name cannot be empty")
 	}
 
-	return s.providerRepo.Create(name, description)
+	return s.providerRepo.Create(userID, name, description)
 }
 
 func (s *ProviderService) UpdateProvider(id int64, name string, description string) (*Provider, error) {

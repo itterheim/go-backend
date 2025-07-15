@@ -22,13 +22,14 @@ func (r *ProviderRepository) GetById(id int64) (*Provider, error) {
 	provider := &Provider{}
 	err := r.db.QueryRow(context.Background(), `
 		SELECT
-			id, created, updated, name, description, expiration
+			id, created, updated, user_id, name, description, expiration
 		FROM providers
 		WHERE id = $1
 	`, id).Scan(
 		&provider.ID,
 		&provider.Created,
 		&provider.Updated,
+		&provider.UserID,
 		&provider.Name,
 		&provider.Description,
 		&provider.Expiration,
@@ -45,17 +46,18 @@ func (r *ProviderRepository) GetById(id int64) (*Provider, error) {
 	return provider, nil
 }
 
-func (r *ProviderRepository) Create(name, description string) (*Provider, error) {
+func (r *ProviderRepository) Create(userID int64, name, description string) (*Provider, error) {
 	provider := &Provider{}
 
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO providers (name, description)
+		INSERT INTO providers (user_id, name, description)
 		VALUES ($1, $2)
-		RETURNING id, created, updated, name, description
+		RETURNING id, created, updated, user_id, name, description
 	`, name, description).Scan(
 		&provider.ID,
 		&provider.Created,
 		&provider.Updated,
+		&provider.UserID,
 		&provider.Name,
 		&provider.Description,
 	)
@@ -73,11 +75,12 @@ func (r *ProviderRepository) Update(data *Provider) (*Provider, error) {
 		UPDATE providers
 			SET name = $2, description = $3
 		WHERE id = $1
-		RETURNING id, created, updated, name, description, expiration
+		RETURNING id, created, updated, user_id, name, description, expiration
 	`, data.ID, data.Name, data.Description).Scan(
 		&provider.ID,
 		&provider.Created,
 		&provider.Updated,
+		&provider.UserID,
 		&provider.Name,
 		&provider.Description,
 		&provider.Expiration,
@@ -108,7 +111,7 @@ func (r *ProviderRepository) Delete(providerId int64) error {
 func (r *ProviderRepository) List() ([]Provider, error) {
 	rows, err := r.db.Query(context.Background(), `
 		SELECT
-			id, created, updated, name, description, expiration
+			id, created, updated, user_id, name, description, expiration
 		FROM providers
 	`)
 
@@ -124,6 +127,7 @@ func (r *ProviderRepository) List() ([]Provider, error) {
 			&provider.ID,
 			&provider.Created,
 			&provider.Updated,
+			&provider.UserID,
 			&provider.Name,
 			&provider.Description,
 			&provider.Expiration,
