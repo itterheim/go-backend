@@ -30,6 +30,11 @@ func main() {
 	}
 	defer conn.Close()
 
+	err = db.Check(conn)
+	if err != nil {
+		panic(err)
+	}
+
 	mux := router.NewRouter(conn, &cfg.Auth)
 
 	router := middleware.LoggingMiddleware(mux)
