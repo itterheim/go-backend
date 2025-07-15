@@ -31,6 +31,11 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	var authHandler handler.Handler = core.NewAuthHandler(authService, config)
 	routes = append(routes, authHandler.GetRoutes()...)
 
+	// users
+	userService := core.NewUserService(userRepo)
+	var userHandler handler.Handler = core.NewUserHandler(userService)
+	routes = append(routes, userHandler.GetRoutes()...)
+
 	// provider
 	providerService := core.NewProviderService(providerRepo, authService)
 	var providerHandler handler.Handler = core.NewProviderHandler(providerService)

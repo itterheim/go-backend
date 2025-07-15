@@ -9,12 +9,12 @@ import (
 )
 
 type User struct {
-	ID       int64
-	Created  time.Time
-	Updated  time.Time
-	Username string
-	Password string
-	Role     jwt.ClaimRole
+	ID       int64         `json:"id"`
+	Created  time.Time     `json:"created"`
+	Updated  time.Time     `json:"updated"`
+	Username string        `json:"username"`
+	Password string        `json:"-"`
+	Role     jwt.ClaimRole `json:"role"`
 }
 
 func (u *User) CheckPassword(password string) bool {
