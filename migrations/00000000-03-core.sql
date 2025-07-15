@@ -38,3 +38,4 @@ CREATE INDEX tags_parent_id ON tags (parent_id);
 CREATE INDEX tags_user_id_idx ON tags (user_id);
 
 ALTER TABLE tags ADD CONSTRAINT fk_tags_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE tags ADD CONSTRAINT fk_tags_parent_id FOREIGN KEY (parent_id) REFERENCES tags (id) ON DELETE SET NULL;
