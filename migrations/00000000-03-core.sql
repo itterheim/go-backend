@@ -29,11 +29,12 @@ CREATE TABLE tags (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     tag TEXT NOT NULL,
     description TEXT,
-    parent BIGINT,
+    parent_id BIGINT,
     user_id BIGINT NOT NULL
 );
 
 CREATE INDEX tags_tag_trgm ON tags USING GIN(tag gin_trgm_ops);
+CREATE INDEX tags_parent_id ON tags (parent_id);
 CREATE INDEX tags_user_id_idx ON tags (user_id);
 
 ALTER TABLE tags ADD CONSTRAINT fk_tags_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;

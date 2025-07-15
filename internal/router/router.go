@@ -23,6 +23,7 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	userRepo := core.NewUserRepository(db)
 	providerRepo := core.NewProviderRepository(db)
 	eventRepo := core.NewEventRepository(db)
+	tagRepo := core.NewTagRepository(db)
 
 	// auth
 	authService := core.NewAuthService(userRepo, providerRepo, tokenRepo, config)
@@ -45,6 +46,11 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	eventService := core.NewEventService(eventRepo)
 	var eventHandler handler.Handler = core.NewEventHandler(eventService)
 	routes = append(routes, eventHandler.GetRoutes()...)
+
+	// tags
+	tagService := core.NewTagService(tagRepo)
+	var tagHandler handler.Handler = core.NewTagHandler(tagService)
+	routes = append(routes, tagHandler.GetRoutes()...)
 
 	// location
 	locationRepo := locations.NewLocationRepository(db)
