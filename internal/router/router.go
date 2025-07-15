@@ -25,7 +25,7 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	eventRepo := core.NewEventRepository(db)
 
 	// auth
-	authService := core.NewAuthService(userRepo, providerRepo, tokenRepo, config.JWTSecret)
+	authService := core.NewAuthService(userRepo, providerRepo, tokenRepo, config)
 	authenticationMiddleware := core.GetAuthenticationMiddleware(authService)
 	authorizationMiddleware := core.GetAuthorizationMiddleware(authService)
 	var authHandler handler.Handler = core.NewAuthHandler(authService, config)

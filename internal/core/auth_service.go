@@ -1,6 +1,7 @@
 package core
 
 import (
+	"backend/internal/config"
 	pkgjwt "backend/pkg/jwt"
 	"errors"
 	"fmt"
@@ -14,15 +15,15 @@ type AuthService struct {
 	userRepo     *UserRepository
 	tokenRepo    *TokenRepository
 	providerRepo *ProviderRepository
-	jwtSecret    string
+	config       *config.AuthConfig
 }
 
-func NewAuthService(userRepo *UserRepository, providerRepo *ProviderRepository, tokenRepo *TokenRepository, jwtSecret string) *AuthService {
+func NewAuthService(userRepo *UserRepository, providerRepo *ProviderRepository, tokenRepo *TokenRepository, config *config.AuthConfig) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
 		providerRepo: providerRepo,
 		tokenRepo:    tokenRepo,
-		jwtSecret:    jwtSecret,
+		config:       config,
 	}
 }
 
@@ -38,8 +39,8 @@ func (s *AuthService) Login(username, password string) (string, string, error) {
 	}
 
 	// create new tokens
-	claims := s.createClaims(user.ID, pkgjwt.UserClaim, user.Role)
-	return s.createJWTTokens(claims)
+	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration, user.Role)
+	return s.createJWTTokens(accessClaims)
 }
 
 func (s *AuthService) ValidateToken(receivedToken string) (pkgjwt.Claims, error) {
@@ -50,7 +51,7 @@ func (s *AuthService) ValidateToken(receivedToken string) (pkgjwt.Claims, error)
 			return nil, errors.New("invalid signing method")
 		}
 
-		return []byte(s.jwtSecret), nil
+		return []byte(s.config.JWTSecret), nil
 	})
 	if err != nil {
 		return pkgjwt.Claims{}, err
@@ -92,10 +93,10 @@ func (s *AuthService) ValidateRefreshToken(token string) (string, string, error)
 		return "", "", errors.New("ValidateRefreshToken: failed to retrieve user")
 	}
 
-	s.createClaims(user.ID, pkgjwt.UserClaim, user.Role)
+	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration, user.Role)
 
 	// rotate refresh token (remove old)
-	refresh, access, err := s.createJWTTokens(claims)
+	refresh, access, err := s.createJWTTokens(accessClaims)
 	if err != nil {
 		return "", "", err
 	}
@@ -120,7 +121,7 @@ func (s *AuthService) CreateJWTToken(claims pkgjwt.Claims) (string, error) {
 		"role": claims.Role,
 	})
 
-	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
 	if err != nil {
 		return "", err
 	}
@@ -129,7 +130,7 @@ func (s *AuthService) CreateJWTToken(claims pkgjwt.Claims) (string, error) {
 }
 
 func (s *AuthService) createJWTTokens(claims pkgjwt.Claims) (refreshToken string, accessToken string, err error) {
-	refreshClaims := s.createClaims(claims.UserID, claims.Type, claims.Role)
+	refreshClaims := s.createClaims(claims.UserID, claims.Type, s.config.RefreshExpiration, claims.Role)
 	refreshToken, err = s.CreateJWTToken(refreshClaims)
 	if err != nil {
 		return "", "", err
@@ -145,7 +146,7 @@ func (s *AuthService) createJWTTokens(claims pkgjwt.Claims) (refreshToken string
 	}
 
 	// generate new JWT access token
-	accessClaims := s.createClaims(claims.UserID, claims.Type, claims.Role)
+	accessClaims := s.createClaims(claims.UserID, claims.Type, s.config.AccessExpiration, claims.Role)
 	accessToken, err = s.CreateJWTToken(accessClaims)
 	if err != nil {
 		return "", "", err
@@ -206,8 +207,8 @@ func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (pkgjwt.Claims, error
 	return claims, nil
 }
 
-func (s *AuthService) createClaims(id int64, claimType pkgjwt.ClaimType, role pkgjwt.ClaimRole) pkgjwt.Claims {
-	expiration := time.Now().Add(time.Hour * 24)
+func (s *AuthService) createClaims(id int64, claimType pkgjwt.ClaimType, expiresInMinutes time.Duration, role pkgjwt.ClaimRole) pkgjwt.Claims {
+	expiration := time.Now().Add(time.Minute * expiresInMinutes)
 	jti := uuid.New().String()
 
 	return pkgjwt.Claims{

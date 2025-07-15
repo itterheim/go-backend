@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -30,9 +31,11 @@ func (c *DatabaseConfig) GetConnectionString() string {
 }
 
 type AuthConfig struct {
-	JWTSecret  string
-	Secure     bool
-	BCryptCost int `mapstructure:"bcrypt_cost"`
+	JWTSecret         string
+	Secure            bool
+	BCryptCost        int           `mapstructure:"bcrypt_cost"`
+	AccessExpiration  time.Duration `mapstructure:"access_expiration"`
+	RefreshExpiration time.Duration `mapstructure:"refresh_expiration"`
 }
 
 func LoadConfig(path string) (*Config, error) {

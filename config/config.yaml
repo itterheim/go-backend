@@ -12,3 +12,5 @@ auth:
     jwt_secret: ...your-secret-key...
     secure: false # https only cookies
     bcrypt_cost: 13
+    access_expiration: 15
+    refresh_expiration: 20160 # two weeks
