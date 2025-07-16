@@ -69,7 +69,7 @@ func (r *TagRepository) CreateTag(data *Tag) (*Tag, error) {
 	var id int64 = 0
 	err := r.db.QueryRow(context.Background(), `
 		INSERT INTO tags (tag, description, parent_id, user_id)
-		VLAUES ($1, $2, $3, $4)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`, data.Tag, data.Description, data.ParentID, data.UserID).Scan(&id)
 	if err != nil {
