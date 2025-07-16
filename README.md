@@ -26,3 +26,10 @@ An exploration of
 - `pkg/cli` - CLI utilities
 - `pkg/handler` - generic types and utilities for http handlers
 - `pkg/middleware` - useful http middlewares
+
+## SSL for localhost
+
+```bash
+openssl genrsa -out key.pem 2048
+openssl req -new -x509 -key key.pem -out cert.pem -days 365 -subj "/C=.../ST=.../L=.../O=Local Dev/OU=IT/CN=localhost"
+```

@@ -37,10 +37,11 @@ func main() {
 
 	mux := router.NewRouter(conn, &cfg.Auth)
 
-	router := middleware.LoggingMiddleware(mux)
+	router := middleware.CorsMiddleware(mux)
+	router = middleware.LoggingMiddleware(router)
 
 	fmt.Println("Starting server on port", cfg.Server.Port)
-	err = http.ListenAndServe(":"+cfg.Server.Port, router)
+	err = http.ListenAndServeTLS(":"+cfg.Server.Port, "./cert.pem", "./key.pem", router)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 		return
