@@ -35,9 +35,11 @@ func main() {
 		panic(err)
 	}
 
-	mux := router.NewRouter(conn, &cfg.Auth)
+	var router http.Handler = router.NewRouter(conn, &cfg.Auth)
 
-	router := middleware.CorsMiddleware(mux)
+	if cfg.Server.Cors {
+		router = middleware.CorsMiddleware(router)
+	}
 	router = middleware.LoggingMiddleware(router)
 
 	fmt.Println("Starting server on port", cfg.Server.Port)
