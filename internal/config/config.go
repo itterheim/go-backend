@@ -17,6 +17,7 @@ type Config struct {
 type ServerConfig struct {
 	Port string
 	Cors bool
+	SSL  bool
 }
 
 type DatabaseConfig struct {

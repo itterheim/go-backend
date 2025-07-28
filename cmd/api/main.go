@@ -43,7 +43,11 @@ func main() {
 	router = middleware.LoggingMiddleware(router)
 
 	fmt.Println("Starting server on port", cfg.Server.Port)
-	err = http.ListenAndServeTLS(":"+cfg.Server.Port, "./cert.pem", "./key.pem", router)
+	if cfg.Server.SSL {
+		err = http.ListenAndServeTLS(":"+cfg.Server.Port, "./cert.pem", "./key.pem", router)
+	} else {
+		err = http.ListenAndServe(":"+cfg.Server.Port, router)
+	}
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 		return
