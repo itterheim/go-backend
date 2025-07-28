@@ -17,11 +17,11 @@ func NewTagHandler(service *TagService) *TagHandler {
 
 func (h *TagHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /core/tags/{$}", h.ListTags, handler.RouteAuthenticatedRole),
-		handler.NewRoute("GET /core/tags/{id}", h.GetTag, handler.RouteAuthenticatedRole),
-		handler.NewRoute("POST /core/tags", h.CreateTag, handler.RouteOwnerRole),
-		handler.NewRoute("PUT /core/tags/{id}", h.UpdateTag, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /core/tags/{id}", h.DeleteTag, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/tags/{$}", h.ListTags, handler.RouteAuthenticatedRole),
+		handler.NewRoute("GET /api/core/tags/{id}", h.GetTag, handler.RouteAuthenticatedRole),
+		handler.NewRoute("POST /api/core/tags", h.CreateTag, handler.RouteOwnerRole),
+		handler.NewRoute("PUT /api/core/tags/{id}", h.UpdateTag, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /api/core/tags/{id}", h.DeleteTag, handler.RouteOwnerRole),
 	}
 }
 

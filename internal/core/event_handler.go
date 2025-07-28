@@ -19,11 +19,11 @@ func NewEventHandler(service *EventService) *EventHandler {
 
 func (h *EventHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /core/events/{$}", h.GetEvents, handler.RouteOwnerRole),
-		handler.NewRoute("GET /core/events/{id}", h.GetEvent, handler.RouteOwnerRole),
-		handler.NewRoute("PUT /core/events/{id}", h.UpdateEvent, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /core/events/{id}", h.DeleteEvent, handler.RouteOwnerRole),
-		handler.NewRoute("POST /core/events", h.CreateEvent, handler.RouteProviderRole),
+		handler.NewRoute("GET /api/core/events/{$}", h.GetEvents, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/events/{id}", h.GetEvent, handler.RouteOwnerRole),
+		handler.NewRoute("PUT /api/core/events/{id}", h.UpdateEvent, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /api/core/events/{id}", h.DeleteEvent, handler.RouteOwnerRole),
+		handler.NewRoute("POST /api/core/events", h.CreateEvent, handler.RouteProviderRole),
 	}
 }
 

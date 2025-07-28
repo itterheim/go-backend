@@ -17,8 +17,8 @@ func NewUserHandler(service *UserService) *UserHandler {
 
 func (h *UserHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /core/users/{$}", h.ListUsers, handler.RouteOwnerRole),
-		handler.NewRoute("GET /core/users/{id}", h.GetUser, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/users/{$}", h.ListUsers, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/users/{id}", h.GetUser, handler.RouteOwnerRole),
 	}
 }
 

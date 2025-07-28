@@ -22,10 +22,10 @@ func NewAuthHandler(service *AuthService, config *config.AuthConfig) *AuthHandle
 
 func (h *AuthHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /auth", h.Validate, handler.RouteAuthenticatedRole),
-		handler.NewRoute("POST /auth", h.Login, handler.RoutePublicRole),
-		handler.NewRoute("DELETE /auth", h.Logout, handler.RouteAuthenticatedRole),
-		handler.NewRoute("POST /auth/refresh", h.Refresh, handler.RoutePublicRole),
+		handler.NewRoute("GET /api/auth", h.Validate, handler.RouteAuthenticatedRole),
+		handler.NewRoute("POST /api/auth", h.Login, handler.RoutePublicRole),
+		handler.NewRoute("DELETE /api/auth", h.Logout, handler.RouteAuthenticatedRole),
+		handler.NewRoute("POST /api/auth/refresh", h.Refresh, handler.RoutePublicRole),
 	}
 }
 
