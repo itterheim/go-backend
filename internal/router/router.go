@@ -6,15 +6,13 @@ import (
 	"backend/internal/locations"
 	"backend/pkg/handler"
 	"net/http"
+	"path/filepath"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	r := http.NewServeMux()
-
-	fs := http.FileServer(http.Dir("./web"))
-	r.Handle("/", fs)
 
 	routes := make([]handler.Route, 0)
 
@@ -52,11 +50,17 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	var tagHandler handler.Handler = core.NewTagHandler(tagService)
 	routes = append(routes, tagHandler.GetRoutes()...)
 
-	// location
+	// location - history
 	locationRepo := locations.NewLocationRepository(db)
 	locationService := locations.NewLocationService(locationRepo, eventRepo)
 	var locationHandler handler.Handler = locations.NewLocationHandler(locationService)
 	routes = append(routes, locationHandler.GetRoutes()...)
+
+	// location - places
+	placeRepo := locations.NewPlaceRepository(db)
+	placeService := locations.NewPlaceService(placeRepo)
+	var placeHandler handler.Handler = locations.NewPlaceHandler(placeService)
+	routes = append(routes, placeHandler.GetRoutes()...)
 
 	for _, route := range routes {
 		var handlerFunc http.Handler = route.HandlerFunc
@@ -71,6 +75,22 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 
 		r.Handle(route.Pattern, handlerFunc)
 	}
+
+	fs := http.FileServer(http.Dir("./web"))
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		file, err := http.Dir("./web").Open(r.URL.Path)
+		if err == nil {
+			defer file.Close()
+			fileInfo, err := file.Stat()
+			if err == nil && !fileInfo.IsDir() {
+				fs.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		indexPath := filepath.Join("web", "index.html")
+		http.ServeFile(w, r, indexPath)
+	})
 
 	return r
 }
