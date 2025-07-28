@@ -3,40 +3,35 @@ package locations
 import (
 	"backend/pkg/handler"
 	"net/http"
-	"time"
 )
 
-type LocationHandler struct {
+type PlaceHandler struct {
 	handler.BaseHandler
 
-	service *LocationService
+	service *PlaceService
 }
 
-func NewLocationHandler(service *LocationService) *LocationHandler {
-	return &LocationHandler{service: service}
+func NewPlaceHandler(service *PlaceService) *PlaceHandler {
+	return &PlaceHandler{service: service}
 }
 
-func (h *LocationHandler) GetRoutes() []handler.Route {
+func (h *PlaceHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /api/locations/history/{$}", h.ListHistory, handler.RouteOwnerRole),
-		handler.NewRoute("GET /api/locations/history/{id}", h.GetHistory, handler.RouteOwnerRole),
-		handler.NewRoute("POST /api/locations/history", h.RegisterHistory, handler.RouteProviderRole),
-		handler.NewRoute("PUT /api/locations/history/{id}", h.UpdateHistory, handler.RouteProviderRole),
-		handler.NewRoute("DELETE /api/locations/history/{id}", h.DeleteHistory, handler.RouteProviderRole),
+		handler.NewRoute("GET /api/locations/places/{$}", h.ListPlaces, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/locations/places/{id}", h.GetPlace, handler.RouteOwnerRole),
+		handler.NewRoute("POST /api/locations/places", h.CreatePlace, handler.RouteProviderRole),
+		handler.NewRoute("PUT /api/locations/places/{id}", h.UpdatePlace, handler.RouteProviderRole),
+		handler.NewRoute("DELETE /api/locations/places/{id}", h.DeletePlace, handler.RouteProviderRole),
 	}
 }
 
-func (h *LocationHandler) ListHistory(w http.ResponseWriter, r *http.Request) {
+func (h *PlaceHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
 	}
 
-	// TODO: read from query string
-	from := time.UnixMilli(0)
-	to := time.Now()
-
-	data, err := h.service.ListHistory(from, to, claims.UserID)
+	data, err := h.service.ListPlaces(claims.UserID)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err)
 		return
@@ -45,7 +40,7 @@ func (h *LocationHandler) ListHistory(w http.ResponseWriter, r *http.Request) {
 	h.SendJSON(w, http.StatusOK, data)
 }
 
-func (h *LocationHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
+func (h *PlaceHandler) GetPlace(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
@@ -57,28 +52,28 @@ func (h *LocationHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.service.GetHistory(id, claims.UserID)
+	data, err := h.service.GetPlace(id, claims.UserID)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if data == nil {
-		h.SendJSON(w, http.StatusNotFound, "gps history not found")
+		h.SendJSON(w, http.StatusNotFound, "place not found")
 		return
 	}
 
 	h.SendJSON(w, http.StatusOK, data)
 }
 
-func (h *LocationHandler) RegisterHistory(w http.ResponseWriter, r *http.Request) {
+func (h *PlaceHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
-	var data CreateGpsHistoryRequest
+	var data CreatePlaceRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
@@ -86,9 +81,8 @@ func (h *LocationHandler) RegisterHistory(w http.ResponseWriter, r *http.Request
 	}
 
 	data.UserID = claims.UserID
-	data.ProviderID = claims.ProviderID
 
-	result, err := h.service.RegisterHistory(&data)
+	result, err := h.service.CreatePlace(&data)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -97,7 +91,7 @@ func (h *LocationHandler) RegisterHistory(w http.ResponseWriter, r *http.Request
 	h.SendJSON(w, http.StatusCreated, result)
 }
 
-func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) {
+func (h *PlaceHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
@@ -109,7 +103,7 @@ func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var data GpsHistory
+	var data Place
 	err = h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
@@ -117,7 +111,6 @@ func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	data.ID = id
-	data.ProviderID = claims.ProviderID
 	data.UserID = claims.UserID
 
 	result, err := h.service.UpdateHistory(&data)
@@ -129,7 +122,7 @@ func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) 
 	h.SendJSON(w, http.StatusOK, result)
 }
 
-func (h *LocationHandler) DeleteHistory(w http.ResponseWriter, r *http.Request) {
+func (h *PlaceHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())

@@ -3,7 +3,6 @@ package locations
 import (
 	"backend/internal/core"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -19,12 +18,12 @@ func NewLocationService(locationRepo *LocationRepository, eventRepo *core.EventR
 	}
 }
 
-func (s *LocationService) ListHistory(from, to time.Time) ([]GpsHistory, error) {
-	return s.locationRepo.ListHistory()
+func (s *LocationService) ListHistory(from, to time.Time, userID int64) ([]GpsHistory, error) {
+	return s.locationRepo.ListHistory(userID)
 }
 
-func (s *LocationService) GetHistory(id int64) (*GpsHistory, error) {
-	return s.locationRepo.GetHistory(id)
+func (s *LocationService) GetHistory(id, userID int64) (*GpsHistory, error) {
+	return s.locationRepo.GetHistory(id, userID)
 }
 
 func (s *LocationService) RegisterHistory(request *CreateGpsHistoryRequest) (*GpsHistoryResponse, error) {
@@ -32,52 +31,35 @@ func (s *LocationService) RegisterHistory(request *CreateGpsHistoryRequest) (*Gp
 		request.Timestamp = time.Now()
 	}
 
-	// create event
-	event, err := s.eventRepo.CreateEvent(&core.Event{
-		Type:       core.EventTypeMoment,
-		Timestamp:  request.Timestamp,
-		Status:     core.EventStatusPending,
-		Tags:       request.Tags,
-		Note:       request.Note,
-		Reference:  LocationGPSHistoryTable,
-		ProviderID: request.ProviderID,
-		UserID:     request.UserID,
-	})
-	if err != nil {
-		return nil, errors.New("LocationService.RegisterHistory: failed to create event\n" + err.Error())
-	}
-
 	// create gps history
 	history, err := s.locationRepo.CreateHistory(&GpsHistory{
-		Latitude:  request.Latitude,
-		Longitude: request.Longitude,
-		Accuracy:  request.Accuracy,
+		Timestamp:  request.Timestamp,
+		Latitude:   request.Latitude,
+		Longitude:  request.Longitude,
+		Accuracy:   request.Accuracy,
+		ProviderID: request.ProviderID,
+		UserID:     request.UserID,
 	})
 	if err != nil {
 		return nil, errors.New("LocationService.RegisterHistory: failed to create gps history\n" + err.Error())
 	}
 
 	return &GpsHistoryResponse{
-		Event:     event,
+		ID:        history.ID,
+		Timestamp: history.Timestamp,
 		Latitude:  history.Latitude,
 		Longitude: history.Longitude,
 		Accuracy:  history.Accuracy,
-		Created:   history.Created,
 	}, nil
 }
 
-func (s *LocationService) UpdateHistory(userId int64, data *GpsHistory) (*GpsHistory, error) {
-	history, err := s.GetHistory(data.ID)
-	if err != nil {
-		return nil, err
+func (s *LocationService) UpdateHistory(data *GpsHistory) (*GpsHistory, error) {
+	if data.Timestamp.IsZero() {
+		data.Timestamp = time.Now()
 	}
-
-	// TODO: check if user actually owns this history
-	fmt.Println(history)
-
 	return s.locationRepo.UpdateHistory(data)
 }
 
-func (s *LocationService) DeleteHistory(id int64) error {
-	return s.locationRepo.DeleteHistory(id)
+func (s *LocationService) DeleteHistory(id, updateID int64) error {
+	return s.locationRepo.DeleteHistory(id, updateID)
 }
