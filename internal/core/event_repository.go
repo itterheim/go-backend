@@ -24,7 +24,8 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 			until,
 			status,
 			tags,
-			note
+			note,
+			data
 		FROM events
 		ORDER BY timestamp ASC
 	`)
@@ -37,7 +38,7 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 	events := make([]Event, 0)
 	for rows.Next() {
 		event := Event{}
-		err = rows.Scan(&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Status, &event.Tags, &event.Note)
+		err = rows.Scan(&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Status, &event.Tags, &event.Note, &event.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -59,13 +60,14 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 		    until,
 		    tags,
 		    note,
+			data,
 		    status,
 			user_id,
 			provider_id
 		FROM events
 		WHERE id = $1
 	`, id).Scan(
-		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Status, &event.UserID, &event.ProviderID,
+		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Data, &event.Status, &event.UserID, &event.ProviderID,
 	)
 
 	if err != nil {
@@ -78,10 +80,10 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 func (r *EventRepository) CreateEvent(event *Event) (*Event, error) {
 	var id int64 = 0
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO events (type, timestamp, until, tags, note, status, provider_id, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO events (type, timestamp, until, tags, note, data, status, provider_id, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id
-	`, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Status, event.ProviderID, event.UserID).Scan(&id)
+	`, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Data, event.Status, event.ProviderID, event.UserID).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +99,12 @@ func (r *EventRepository) UpdateEvent(event *Event) (*Event, error) {
 		    until = $4,
 		    tags = $5,
 		    note = $6,
-		    status = $7,
-		    provider_id = $8,
-		    user_id = $9
+			data = $7,
+		    status = $8,
+		    provider_id = $9,
+		    user_id = $10
 		WHERE id = $1
-	`, event.ID, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Status, event.ProviderID, event.UserID)
+	`, event.ID, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Data, event.Status, event.ProviderID, event.UserID)
 	if err != nil {
 		return nil, err
 	}

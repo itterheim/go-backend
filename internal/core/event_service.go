@@ -50,6 +50,7 @@ func (s *EventService) CreateEvent(event *CreateEventRequest) (*Event, error) {
 		Status:     event.Status,
 		Tags:       event.Tags,
 		Note:       event.Note,
+		Data:       event.Data,
 		ProviderID: event.ProviderID,
 		UserID:     event.UserID,
 	})
@@ -90,6 +91,7 @@ func (s *EventService) UpdateEvent(event *UpdateEventRequest) (*Event, error) {
 		Status:     event.Status,
 		Tags:       event.Tags,
 		Note:       event.Note,
+		Data:       event.Data,
 		ProviderID: event.ProviderID,
 		UserID:     event.UserID,
 	})

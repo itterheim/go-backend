@@ -7,6 +7,7 @@ CREATE TABLE events (
     status VARCHAR(20) NOT NULL,
     tags TEXT[],
     note TEXT,
+    data JSONB,
     reference TEXT,
     provider_id BIGINT,
     user_id BIGINT NOT NULL
