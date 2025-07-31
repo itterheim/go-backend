@@ -21,7 +21,6 @@ func (s *TagService) CreateTag(data *CreateTagRequest) (*Tag, error) {
 	tag, err := s.repo.CreateTag(&Tag{
 		Tag:         data.Tag,
 		Description: data.Description,
-		UserID:      data.UserID,
 	})
 	if err != nil {
 		return nil, err
@@ -36,7 +35,6 @@ func (s *TagService) UpdateTag(data *UpdateTagRequest) (*Tag, error) {
 		ID:          data.ID,
 		Tag:         data.Tag,
 		Description: data.Description,
-		UserID:      data.UserID,
 	})
 	if err != nil {
 		return nil, err

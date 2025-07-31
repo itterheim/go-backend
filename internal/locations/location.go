@@ -1,32 +1,56 @@
 package locations
 
 import (
-	"time"
+	"backend/internal/core"
 )
 
-type GpsHistory struct {
-	ID         int64     `json:"id"`
-	Timestamp  time.Time `json:"timestamp"`
-	Latitude   float64   `json:"latitude"`
-	Longitude  float64   `json:"longitude"`
-	Accuracy   float64   `json:"accuracy"`
-	ProviderID *int64    `json:"-"`
-	UserID     int64     `json:"-"`
+type Location struct {
+	ID        int64   `json:"id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Accuracy  float64 `json:"accuracy"`
+	EventID   int64   `json:"eventId"`
 }
 
-type CreateGpsHistoryRequest struct {
-	Timestamp  time.Time `json:"timestamp"`
-	Latitude   float64   `json:"latitude"`
-	Longitude  float64   `json:"longitude"`
-	Accuracy   float64   `json:"accuracy"`
-	ProviderID *int64    `json:"-"`
-	UserID     int64     `json:"-"`
+type LocationEvent struct {
+	core.Event
+	Extras Location
 }
 
-type GpsHistoryResponse struct {
-	ID        int64     `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
-	Accuracy  float64   `json:"accuracy"`
+type CreateLocationRequest struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Accuracy  float64 `json:"accuracy"`
+}
+
+type CreateLocationEventRequest struct {
+	core.CreateEventRequest
+
+	Extras CreateLocationRequest `json:"extras"`
+}
+
+type UpdateLocationRequest struct {
+	ID        int64   `json:"id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Accuracy  float64 `json:"accuracy"`
+}
+
+type UpdateLocationEventRequest struct {
+	core.UpdateEventRequest
+
+	Extras UpdateLocationRequest `json:"extras"`
+}
+
+type LocationResponse struct {
+	ID        int64   `json:"id"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Accuracy  float64 `json:"accuracy"`
+}
+
+type LocationEventResponse struct {
+	core.EventResponse
+
+	Extras LocationResponse `json:"extras"`
 }

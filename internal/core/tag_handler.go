@@ -17,8 +17,8 @@ func NewTagHandler(service *TagService) *TagHandler {
 
 func (h *TagHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /api/core/tags/{$}", h.ListTags, handler.RouteAuthenticatedRole),
-		handler.NewRoute("GET /api/core/tags/{id}", h.GetTag, handler.RouteAuthenticatedRole),
+		handler.NewRoute("GET /api/core/tags/{$}", h.ListTags, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/tags/{id}", h.GetTag, handler.RouteOwnerRole),
 		handler.NewRoute("POST /api/core/tags", h.CreateTag, handler.RouteOwnerRole),
 		handler.NewRoute("PUT /api/core/tags/{id}", h.UpdateTag, handler.RouteOwnerRole),
 		handler.NewRoute("DELETE /api/core/tags/{id}", h.DeleteTag, handler.RouteOwnerRole),
@@ -54,20 +54,12 @@ func (h *TagHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TagHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-		return
-	}
-
 	var body CreateTagRequest
-	err = h.ParseJSON(r, &body)
+	err := h.ParseJSON(r, &body)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	body.UserID = claims.UserID
 
 	result, err := h.service.CreateTag(&body)
 	if err != nil {
@@ -79,12 +71,6 @@ func (h *TagHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-		return
-	}
-
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
@@ -99,7 +85,6 @@ func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body.ID = id
-	body.UserID = claims.UserID
 
 	result, err := h.service.UpdateTag(&body)
 	if err != nil {

@@ -68,10 +68,10 @@ func (r *TagRepository) GetTag(id int64) (*Tag, error) {
 func (r *TagRepository) CreateTag(data *Tag) (*Tag, error) {
 	var id int64 = 0
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO tags (tag, description, parent_id, user_id)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO tags (tag, description, parent_id)
+		VALUES ($1, $2, $3)
 		RETURNING id
-	`, data.Tag, data.Description, data.ParentID, data.UserID).Scan(&id)
+	`, data.Tag, data.Description, data.ParentID).Scan(&id)
 	if err != nil {
 		return nil, err
 	}

@@ -1,67 +1,74 @@
 package core
 
 import (
-	"encoding/json"
+	"errors"
 	"time"
 )
 
-type EventStatus string
 type EventType string
 
 const (
-	EventStatusPending   EventStatus = "Pending"
-	EventStatusApproved  EventStatus = "Approved"
-	EventStatusRejected  EventStatus = "Rejected"
-	EventStatusDraft     EventStatus = "Draft"
-	EventStatusScheduled EventStatus = "Scheduled"
-
-	EventTypeMoment   EventType = "Moment"
-	EventTypeInterval EventType = "Interval"
+	EventTypeMoment   EventType = "moment"
+	EventTypeInterval EventType = "interval"
 )
 
-var EventStatuses = map[EventStatus]bool{
-	EventStatusPending:   true,
-	EventStatusApproved:  true,
-	EventStatusRejected:  true,
-	EventStatusDraft:     true,
-	EventStatusScheduled: true,
-}
+type EventValidation struct{}
 
 type Event struct {
-	ID         int64           `json:"id"`
-	Type       EventType       `json:"type"`
-	Timestamp  time.Time       `json:"timestamp"`
-	Until      *time.Time      `json:"until,omitempty"`
-	Status     EventStatus     `json:"status"`
-	Tags       []string        `json:"tags"`
-	Note       string          `json:"note,omitempty"`
-	Data       json.RawMessage `json:"data,omitempty"`
-	Reference  string          `json:"reference,omitempty"`
-	ProviderID *int64          `json:"providerId,omitempty"`
-	UserID     int64           `json:"-"`
+	ID         int64      `json:"id"`
+	Type       EventType  `json:"type"`
+	Timestamp  *time.Time `json:"timestamp,omitempty"`
+	Until      *time.Time `json:"until,omitempty"`
+	Tags       []string   `json:"tags,omitempty"`
+	Note       string     `json:"note,omitempty"`
+	Reference  string     `json:"reference,omitempty"`
+	ProviderID *int64     `json:"providerId,omitempty"`
+}
+
+type EventRequest struct {
+	Type       EventType  `json:"type"`
+	Timestamp  *time.Time `json:"timestamp,omitempty"`
+	Until      *time.Time `json:"until,omitempty"`
+	Tags       []string   `json:"tags,omitempty"`
+	Note       string     `json:"note,omitempty"`
+	Reference  string     `json:"reference,omitempty"`
+	ProviderID *int64     `json:"-"`
+}
+
+func (e *EventRequest) Validate() error {
+	if e.Type == EventTypeInterval {
+		if e.Timestamp == nil && e.Until == nil {
+			return errors.New("EventRequest.Validate: missing timestamp or until")
+		}
+		return nil
+	}
+
+	if e.Type == EventTypeMoment {
+		if e.Timestamp == nil {
+			now := time.Now()
+			e.Timestamp = &now
+		}
+		return nil
+	}
+
+	return errors.New("EventRequest.Validate: invalid type " + string(e.Type))
 }
 
 type CreateEventRequest struct {
-	Type       EventType       `json:"type"`
-	Timestamp  time.Time       `json:"timestamp"`
-	Until      *time.Time      `json:"until"`
-	Status     EventStatus     `json:"status"`
-	Tags       []string        `json:"tags"`
-	Note       string          `json:"note"`
-	Data       json.RawMessage `json:"data,omitempty"`
-	UserID     int64           `json:"-"`
-	ProviderID *int64          `json:"-"`
+	EventRequest
 }
 
 type UpdateEventRequest struct {
-	ID         int64           `json:"id"`
-	Type       EventType       `json:"type"`
-	Timestamp  time.Time       `json:"timestamp"`
-	Until      *time.Time      `json:"until"`
-	Status     EventStatus     `json:"status"`
-	Tags       []string        `json:"tags"`
-	Note       string          `json:"note"`
-	Data       json.RawMessage `json:"data,omitempty"`
-	UserID     int64           `json:"-"`
-	ProviderID *int64          `json:"-"`
+	EventRequest
+	ID int64 `json:"id"`
+}
+
+type EventResponse struct {
+	ID        int64      `json:"id"`
+	Type      EventType  `json:"type"`
+	Timestamp *time.Time `json:"timestamp,omitempty"`
+	Until     *time.Time `json:"until,omitempty"`
+	Tags      []string   `json:"tags,omitempty"`
+	Note      string     `json:"note,omitempty"`
+	Reference string     `json:"reference,omitempty"`
 }

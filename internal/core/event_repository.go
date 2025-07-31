@@ -22,10 +22,10 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 			type,
 			timestamp,
 			until,
-			status,
 			tags,
 			note,
-			data
+			reference,
+			provider_id
 		FROM events
 		ORDER BY timestamp ASC
 	`)
@@ -38,7 +38,7 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 	events := make([]Event, 0)
 	for rows.Next() {
 		event := Event{}
-		err = rows.Scan(&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Status, &event.Tags, &event.Note, &event.Data)
+		err = rows.Scan(&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Reference, &event.ProviderID)
 		if err != nil {
 			return nil, err
 		}
@@ -60,14 +60,12 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 		    until,
 		    tags,
 		    note,
-			data,
-		    status,
-			user_id,
+			reference,
 			provider_id
 		FROM events
 		WHERE id = $1
 	`, id).Scan(
-		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Data, &event.Status, &event.UserID, &event.ProviderID,
+		&event.ID, &event.Type, &event.Timestamp, &event.Until, &event.Tags, &event.Note, &event.Reference, &event.ProviderID,
 	)
 
 	if err != nil {
@@ -80,10 +78,10 @@ func (r *EventRepository) GetEvent(id int64) (*Event, error) {
 func (r *EventRepository) CreateEvent(event *Event) (*Event, error) {
 	var id int64 = 0
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO events (type, timestamp, until, tags, note, data, status, provider_id, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO events (type, timestamp, until, tags, note, reference, provider_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id
-	`, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Data, event.Status, event.ProviderID, event.UserID).Scan(&id)
+	`, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Reference, event.ProviderID).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -99,12 +97,10 @@ func (r *EventRepository) UpdateEvent(event *Event) (*Event, error) {
 		    until = $4,
 		    tags = $5,
 		    note = $6,
-			data = $7,
-		    status = $8,
-		    provider_id = $9,
-		    user_id = $10
+		    reference = $7,
+		    provider_id = $8
 		WHERE id = $1
-	`, event.ID, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Data, event.Status, event.ProviderID, event.UserID)
+	`, event.ID, event.Type, event.Timestamp, event.Until, event.Tags, event.Note, event.Reference, event.ProviderID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +118,7 @@ func (r *EventRepository) UpdateEvent(event *Event) (*Event, error) {
 
 func (r *EventRepository) DeleteEvent(id int64) error {
 	cmd, err := r.db.Exec(context.Background(), `
-		DELETE FORM events
+		DELETE FROM events
 		WHERE id = $1
 	`, id)
 	if err != nil {

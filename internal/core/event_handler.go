@@ -2,7 +2,6 @@ package core
 
 import (
 	"backend/pkg/handler"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -34,7 +33,7 @@ func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.service.ListEvents(from, to)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	h.SendJSON(w, http.StatusOK, data)
@@ -43,13 +42,13 @@ func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 func (h *EventHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	eventId, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	event, err := h.service.GetEvent(eventId)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -64,24 +63,22 @@ func (h *EventHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	claims, err := h.GetUserClaimsFromContext(r)
 	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err)
+		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
 	var data CreateEventRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	data.UserID = claims.UserID
 	data.ProviderID = claims.ProviderID
 
 	result, err := h.service.CreateEvent(&data)
 	if err != nil {
-		fmt.Println(err)
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -91,25 +88,24 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	eventId, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claims, err := h.GetUserClaimsFromContext(r)
 	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err)
+		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
 	var data UpdateEventRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	data.ID = eventId
-	data.UserID = claims.UserID
 	data.ProviderID = claims.ProviderID
 
 	result, err := h.service.UpdateEvent(&data)
@@ -124,13 +120,13 @@ func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 func (h *EventHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	eventId, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err)
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.service.DeleteEvent(eventId)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)

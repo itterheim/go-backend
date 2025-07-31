@@ -22,11 +22,11 @@ func GetAuthorizationMiddleware(authService *AuthService) func(http.Handler, han
 
 			switch requiredRole {
 			case handler.RouteOwnerRole:
-				if claims.Type == jwt.UserClaim && claims.Role == jwt.OwnerRole {
+				if claims.Type == jwt.UserClaim {
 					allowed = true
 				}
 			case handler.RouteProviderRole:
-				if claims.Type == jwt.ProviderClaim || (claims.Type == jwt.UserClaim && claims.Role == jwt.OwnerRole) {
+				if claims.Type == jwt.ProviderClaim || claims.Type == jwt.UserClaim {
 					allowed = true
 				}
 			}

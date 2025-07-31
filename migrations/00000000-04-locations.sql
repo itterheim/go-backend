@@ -1,19 +1,17 @@
 -- gps history
 CREATE TABLE locations_history (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     accuracy DOUBLE PRECISION NOT NULL,
-    provider_id BIGINT,
-    user_id BIGINT NOT NULL
+    event_id BIGINT NOT NULL
 );
 
-CREATE INDEX locations_history_timestamp_idx ON locations_history (timestamp);
 CREATE INDEX locations_history_lat_idx ON locations_history (latitude);
 CREATE INDEX locations_history_lon_idx ON locations_history (longitude);
-CREATE INDEX locations_history_user_id_idx ON locations_history (user_id);
-CREATE INDEX locations_history_provider_id_idx ON locations_history (provider_id);
+CREATE INDEX locations_history_event_id_idx ON locations_history (event_id);
+
+ALTER TABLE locations_history ADD CONSTRAINT fk_locations_history_event_id FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE;
 
 -- locations
 CREATE TABLE locations_places (
@@ -23,7 +21,6 @@ CREATE TABLE locations_places (
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     radius DOUBLE PRECISION,
-    user_id BIGINT NOT NULL,
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,7 +28,6 @@ CREATE TABLE locations_places (
 CREATE UNIQUE INDEX locations_places_name_unique_idx ON locations_places (name);
 CREATE INDEX locations_places_lat_idx ON locations_places (latitude);
 CREATE INDEX locations_places_lon_idx ON locations_places (longitude);
-CREATE INDEX locations_places_user_id_idx ON locations_places (user_id);
 
 CREATE TRIGGER update_locations_places_updated BEFORE UPDATE ON locations_places
 FOR EACH ROW EXECUTE FUNCTION update_updated_column();

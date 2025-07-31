@@ -22,9 +22,9 @@ func NewAuthHandler(service *AuthService, config *config.AuthConfig) *AuthHandle
 
 func (h *AuthHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
-		handler.NewRoute("GET /api/auth", h.Validate, handler.RouteAuthenticatedRole),
+		handler.NewRoute("GET /api/auth", h.Validate, handler.RouteProviderRole),
 		handler.NewRoute("POST /api/auth", h.Login, handler.RoutePublicRole),
-		handler.NewRoute("DELETE /api/auth", h.Logout, handler.RouteAuthenticatedRole),
+		handler.NewRoute("DELETE /api/auth", h.Logout, handler.RouteOwnerRole),
 		handler.NewRoute("POST /api/auth/refresh", h.Refresh, handler.RoutePublicRole),
 	}
 }
@@ -107,7 +107,7 @@ func (h *AuthHandler) setCookies(w http.ResponseWriter, refreshToken, accessToke
 		HttpOnly: true,
 		Secure:   h.config.Secure,
 		SameSite: http.SameSiteNoneMode,
-		Path:     "/auth/refresh",
+		Path:     "/api/auth/refresh",
 	}
 	http.SetCookie(w, refreshCookie)
 
@@ -129,7 +129,7 @@ func (h *AuthHandler) removeCookies(w http.ResponseWriter) {
 		Value:    "",
 		HttpOnly: true,
 		Secure:   h.config.Secure,
-		Path:     "/auth/refresh",
+		Path:     "/api/auth/refresh",
 		MaxAge:   -1,
 	}
 	http.SetCookie(w, expiredCookie)

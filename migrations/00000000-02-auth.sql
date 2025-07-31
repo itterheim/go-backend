@@ -4,8 +4,7 @@ CREATE TABLE users (
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     username TEXT NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT NOT NULL
+    password TEXT NOT NULL
 );
 
 CREATE UNIQUE INDEX users_username_unique_idx ON users (username);

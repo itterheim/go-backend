@@ -19,40 +19,51 @@ func NewLocationRepository(db *pgxpool.Pool) *LocationRepository {
 	return &LocationRepository{db}
 }
 
-func (r *LocationRepository) ListHistory(userID int64) ([]GpsHistory, error) {
+func (r *LocationRepository) ListHistory() ([]LocationEvent, error) {
 	rows, err := r.db.Query(context.Background(), `
-		SELECT id, timestamp, latitude, longitude, accuracy
+		SELECT
+		    events.id as e_id, type, timestamp, until, tags, note, reference,
+			locations_history.id as l_id, latitude, longitude, accuracy
 		FROM locations_history
-		WHERE user_id = $1
+		INNER JOIN events ON locations_history.event_id = events.id
 		ORDER BY timestamp ASC
-	`, userID)
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	history := make([]GpsHistory, 0)
+	history := make([]LocationEvent, 0)
 	for rows.Next() {
-		gpsHistory := GpsHistory{}
+		location := LocationEvent{}
 
-		err := rows.Scan(&gpsHistory.ID, &gpsHistory.Timestamp, &gpsHistory.Latitude, &gpsHistory.Longitude, &gpsHistory.Accuracy)
+		err := rows.Scan(
+			&location.ID, &location.Type, &location.Timestamp, &location.Until, &location.Tags, &location.Note, &location.Reference,
+			&location.Extras.ID, &location.Extras.Latitude, &location.Extras.Longitude, &location.Extras.Accuracy,
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		history = append(history, gpsHistory)
+		history = append(history, location)
 	}
 
 	return history, nil
 }
 
-func (r *LocationRepository) GetHistory(id, userID int64) (*GpsHistory, error) {
-	var data GpsHistory
+func (r *LocationRepository) GetHistory(id int64) (*LocationEvent, error) {
+	var data LocationEvent
 	err := r.db.QueryRow(context.Background(), `
-		SELECT id, timestamp, latitude, longitude, accuracy
+		SELECT
+		    events.id as e_id, type, timestamp, until, tags, note, reference,
+			locations_history.id as l_id, latitude, longitude, accuracy
 		FROM locations_history
-		WHERE id = $1 AND user_id = $2
-	`, id, userID).Scan(&data.ID, &data.Timestamp, &data.Latitude, &data.Longitude, &data.Accuracy)
+		INNER JOIN events ON locations_history.event_id = events.id
+		WHERE locations_history.id = $1
+	`, id).Scan(
+		&data.ID, &data.Type, &data.Timestamp, &data.Until, &data.Tags, &data.Note, &data.Reference,
+		&data.Extras.ID, &data.Extras.Latitude, &data.Extras.Longitude, &data.Extras.Accuracy,
+	)
 
 	if err == pgx.ErrNoRows {
 		return nil, nil
@@ -65,18 +76,18 @@ func (r *LocationRepository) GetHistory(id, userID int64) (*GpsHistory, error) {
 	return &data, nil
 }
 
-func (r *LocationRepository) CreateHistory(history *GpsHistory) (*GpsHistory, error) {
-	var result GpsHistory
+func (r *LocationRepository) CreateHistory(history *Location) (*Location, error) {
+	var result Location
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO locations_history (timestamp, latitude, longitude, accuracy, provider_id, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, timestamp, latitude, longitude, accuracy
-	`, history.Timestamp, history.Latitude, history.Longitude, history.Accuracy, history.ProviderID, history.UserID).Scan(
+		INSERT INTO locations_history (latitude, longitude, accuracy, event_id)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, latitude, longitude, accuracy, event_id
+	`, history.Latitude, history.Longitude, history.Accuracy, history.EventID).Scan(
 		&result.ID,
-		&result.Timestamp,
 		&result.Latitude,
 		&result.Longitude,
 		&result.Accuracy,
+		&result.EventID,
 	)
 
 	if err != nil {
@@ -86,23 +97,21 @@ func (r *LocationRepository) CreateHistory(history *GpsHistory) (*GpsHistory, er
 	return &result, nil
 }
 
-func (r *LocationRepository) UpdateHistory(history *GpsHistory) (*GpsHistory, error) {
-	var result GpsHistory
+func (r *LocationRepository) UpdateHistory(history *Location) (*Location, error) {
+	var result Location
 	err := r.db.QueryRow(context.Background(), `
 		UPDATE locations_history
-		SET timestamp = $2,
-		    latitude = $3,
-			longitude = $4,
-			accuracy = $5,
-			provider_id = $6
-		WHERE id = $1 AND user_id = $7
-		RETURNING id, timestamp, latitude, longitude, accuracy
-	`, history.ID, history.Timestamp, history.Latitude, history.Longitude, history.Accuracy, history.ProviderID, history.UserID).Scan(
+		SET latitude = $2,
+			longitude = $3,
+			accuracy = $4
+		WHERE id = $1 AND event_id = $5
+		RETURNING id, latitude, longitude, accuracy, event_id
+	`, history.ID, history.Latitude, history.Longitude, history.Accuracy, history.EventID).Scan(
 		&result.ID,
-		&result.Timestamp,
 		&result.Latitude,
 		&result.Longitude,
 		&result.Accuracy,
+		&result.EventID,
 	)
 	if err != nil {
 		return nil, err
@@ -111,11 +120,12 @@ func (r *LocationRepository) UpdateHistory(history *GpsHistory) (*GpsHistory, er
 	return &result, nil
 }
 
-func (r *LocationRepository) DeleteHistory(id, userID int64) error {
+func (r *LocationRepository) DeleteHistory(id int64) error {
 	cmd, err := r.db.Exec(context.Background(), `
-		DELETE FROM locations_history
-		WHERE id = $1 AND user_id = $2
-	`, id, userID)
+		DELETE FROM events
+		USING locations_history
+		WHERE events.id = locations_history.event_id AND locations_history.id = $1
+	`, id)
 	if err != nil {
 		return err
 	}

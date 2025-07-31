@@ -1,7 +1,6 @@
 package core
 
 import (
-	"backend/pkg/jwt"
 	"fmt"
 	"time"
 
@@ -9,12 +8,11 @@ import (
 )
 
 type User struct {
-	ID       int64         `json:"id"`
-	Created  time.Time     `json:"created"`
-	Updated  time.Time     `json:"updated"`
-	Username string        `json:"username"`
-	Password string        `json:"-"`
-	Role     jwt.ClaimRole `json:"role"`
+	ID       int64     `json:"id"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
+	Username string    `json:"username"`
+	Password string    `json:"-"`
 }
 
 func (u *User) CheckPassword(password string) bool {
@@ -25,7 +23,7 @@ func (u *User) CheckPassword(password string) bool {
 	return err == nil
 }
 
-func NewUser(username, password string, role jwt.ClaimRole, bcryptCost int) (*User, error) {
+func NewUser(username, password string, bcryptCost int) (*User, error) {
 	now := time.Now()
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	fmt.Println("Password hashing took", time.Since(now))
@@ -37,6 +35,5 @@ func NewUser(username, password string, role jwt.ClaimRole, bcryptCost int) (*Us
 	return &User{
 		Username: username,
 		Password: string(hash),
-		Role:     role,
 	}, nil
 }

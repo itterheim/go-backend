@@ -5,7 +5,6 @@ import (
 	"backend/internal/core"
 	"backend/internal/db"
 	"backend/pkg/cli"
-	"backend/pkg/jwt"
 	"context"
 	"fmt"
 	"io"
@@ -98,7 +97,7 @@ func main() {
 		fmt.Println("no default user password defined")
 	}
 
-	err = createUser(conn, username, password, jwt.OwnerRole, cfg)
+	err = createUser(conn, username, password, cfg)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return
@@ -271,7 +270,7 @@ func parseVersion(filename string) (string, error) {
 	return "", fmt.Errorf("invalid filename %s", filename)
 }
 
-func createUser(conn *pgxpool.Pool, username, password string, role jwt.ClaimRole, config *config.Config) error {
+func createUser(conn *pgxpool.Pool, username, password string, config *config.Config) error {
 	userRepo := core.NewUserRepository(conn)
 	user, err := userRepo.GetByUsername(username)
 	if user != nil {
@@ -279,13 +278,13 @@ func createUser(conn *pgxpool.Pool, username, password string, role jwt.ClaimRol
 		return nil
 	}
 
-	user, err = core.NewUser(username, password, role, config.Auth.BCryptCost)
+	user, err = core.NewUser(username, password, config.Auth.BCryptCost)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return err
 	}
 
-	user, err = userRepo.Create(user.Username, user.Password, user.Role)
+	user, err = userRepo.Create(user.Username, user.Password)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return err

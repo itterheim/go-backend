@@ -1,7 +1,6 @@
 package core
 
 import (
-	"backend/pkg/jwt"
 	"context"
 	"fmt"
 
@@ -21,10 +20,10 @@ func (r *UserRepository) GetUser(id int64) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(context.Background(), `
 		SELECT
-			id, created, updated, username, password, role
+			id, created, updated, username, password
 		FROM users
 		WHERE id = $1
-	`, id).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password, &user.Role)
+	`, id).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password)
 	if err == pgx.ErrNoRows {
 		fmt.Println(err)
 		return nil, err
@@ -42,10 +41,10 @@ func (r *UserRepository) GetByUsername(username string) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(context.Background(), `
 		SELECT
-			id, created, updated, username, password, role
+			id, created, updated, username, password
 		FROM users
 		WHERE username = $1
-	`, username).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password, &user.Role)
+	`, username).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password)
 	if err == pgx.ErrNoRows {
 		fmt.Println(err)
 		return nil, err
@@ -59,14 +58,14 @@ func (r *UserRepository) GetByUsername(username string) (*User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) Create(username, password string, role jwt.ClaimRole) (*User, error) {
+func (r *UserRepository) Create(username, password string) (*User, error) {
 	user := &User{}
 
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO users (username, password, role)
-		VALUES ($1, $2, $3)
-		RETURNING id, created, updated, username, password, role
-	`, username, password, role).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password, &user.Role)
+		INSERT INTO users (username, password)
+		VALUES ($1, $2)
+		RETURNING id, created, updated, username, password
+	`, username, password).Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +76,7 @@ func (r *UserRepository) Create(username, password string, role jwt.ClaimRole) (
 func (r *UserRepository) ListUsers() ([]User, error) {
 	rows, err := r.db.Query(context.Background(), `
 		SELECT
-			id, created, updated, username, role
+			id, created, updated, username
 		FROM users
 	`)
 
@@ -89,7 +88,7 @@ func (r *UserRepository) ListUsers() ([]User, error) {
 	users := make([]User, 0)
 	for rows.Next() {
 		user := User{}
-		err = rows.Scan(&user.ID, &user.Created, &user.Updated, &user.Username, &user.Role)
+		err = rows.Scan(&user.ID, &user.Created, &user.Updated, &user.Username)
 		if err != nil {
 			return nil, err
 		}

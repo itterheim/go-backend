@@ -27,18 +27,13 @@ func (h *LocationHandler) GetRoutes() []handler.Route {
 }
 
 func (h *LocationHandler) ListHistory(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	// TODO: read from query string
 	from := time.UnixMilli(0)
 	to := time.Now()
 
-	data, err := h.service.ListHistory(from, to, claims.UserID)
+	data, err := h.service.ListHistory(from, to)
 	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -46,18 +41,13 @@ func (h *LocationHandler) ListHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LocationHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	data, err := h.service.GetHistory(id, claims.UserID)
+	data, err := h.service.GetHistory(id)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -78,14 +68,13 @@ func (h *LocationHandler) RegisterHistory(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var data CreateGpsHistoryRequest
+	var data CreateLocationEventRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	data.UserID = claims.UserID
 	data.ProviderID = claims.ProviderID
 
 	result, err := h.service.RegisterHistory(&data)
@@ -98,18 +87,18 @@ func (h *LocationHandler) RegisterHistory(w http.ResponseWriter, r *http.Request
 }
 
 func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) {
-	id, err := h.GetInt64FromPath(r, "id")
-	if err != nil {
-		h.SendJSON(w, http.StatusBadRequest, err.Error())
-	}
-
 	claims, err := h.GetClaimsFromContext(r)
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
-	var data GpsHistory
+	id, err := h.GetInt64FromPath(r, "id")
+	if err != nil {
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
+	}
+
+	var data UpdateLocationEventRequest
 	err = h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
@@ -118,7 +107,6 @@ func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) 
 
 	data.ID = id
 	data.ProviderID = claims.ProviderID
-	data.UserID = claims.UserID
 
 	result, err := h.service.UpdateHistory(&data)
 	if err != nil {
@@ -130,18 +118,13 @@ func (h *LocationHandler) UpdateHistory(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *LocationHandler) DeleteHistory(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = h.service.DeleteHistory(id, claims.UserID)
+	err = h.service.DeleteHistory(id)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

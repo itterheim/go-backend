@@ -39,7 +39,7 @@ func (s *AuthService) Login(username, password string) (string, string, error) {
 	}
 
 	// create new tokens
-	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration, user.Role)
+	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration)
 	return s.createJWTTokens(accessClaims)
 }
 
@@ -93,7 +93,7 @@ func (s *AuthService) ValidateRefreshToken(token string) (string, string, error)
 		return "", "", errors.New("ValidateRefreshToken: failed to retrieve user")
 	}
 
-	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration, user.Role)
+	accessClaims := s.createClaims(user.ID, pkgjwt.UserClaim, s.config.AccessExpiration)
 
 	// rotate refresh token (remove old)
 	refresh, access, err := s.createJWTTokens(accessClaims)
@@ -118,7 +118,6 @@ func (s *AuthService) CreateJWTToken(claims pkgjwt.Claims) (string, error) {
 		"exp":  claims.Expiration.Unix(),
 		"jti":  claims.JTI,
 		"type": claims.Type,
-		"role": claims.Role,
 	})
 
 	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
@@ -130,7 +129,7 @@ func (s *AuthService) CreateJWTToken(claims pkgjwt.Claims) (string, error) {
 }
 
 func (s *AuthService) createJWTTokens(claims pkgjwt.Claims) (refreshToken string, accessToken string, err error) {
-	refreshClaims := s.createClaims(claims.UserID, claims.Type, s.config.RefreshExpiration, claims.Role)
+	refreshClaims := s.createClaims(claims.UserID, claims.Type, s.config.RefreshExpiration)
 	refreshToken, err = s.CreateJWTToken(refreshClaims)
 	if err != nil {
 		return "", "", err
@@ -146,7 +145,7 @@ func (s *AuthService) createJWTTokens(claims pkgjwt.Claims) (refreshToken string
 	}
 
 	// generate new JWT access token
-	accessClaims := s.createClaims(claims.UserID, claims.Type, s.config.AccessExpiration, claims.Role)
+	accessClaims := s.createClaims(claims.UserID, claims.Type, s.config.AccessExpiration)
 	accessToken, err = s.CreateJWTToken(accessClaims)
 	if err != nil {
 		return "", "", err
@@ -171,13 +170,6 @@ func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (pkgjwt.Claims, error
 		return pkgjwt.Claims{}, errors.New("invalid user ID")
 	}
 	claims.UserID = int64(id)
-
-	// get role
-	role, ok := jwtClaims["role"].(string)
-	if !ok {
-		return pkgjwt.Claims{}, errors.New("invalid role")
-	}
-	claims.Role = pkgjwt.ClaimRole(role)
 
 	// get JTI
 	claims.JTI, ok = jwtClaims["jti"].(string)
@@ -207,13 +199,12 @@ func (s *AuthService) parseClaims(jwtClaims jwt.MapClaims) (pkgjwt.Claims, error
 	return claims, nil
 }
 
-func (s *AuthService) createClaims(id int64, claimType pkgjwt.ClaimType, expiresInMinutes time.Duration, role pkgjwt.ClaimRole) pkgjwt.Claims {
+func (s *AuthService) createClaims(id int64, claimType pkgjwt.ClaimType, expiresInMinutes time.Duration) pkgjwt.Claims {
 	expiration := time.Now().Add(time.Minute * expiresInMinutes)
 	jti := uuid.New().String()
 
 	return pkgjwt.Claims{
 		UserID:     id,
-		Role:       role,
 		Type:       claimType,
 		JTI:        jti,
 		Expiration: expiration,
