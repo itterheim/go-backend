@@ -15,14 +15,14 @@ const (
 type EventValidation struct{}
 
 type Event struct {
-	ID         int64      `json:"id"`
-	Type       EventType  `json:"type"`
-	Timestamp  *time.Time `json:"timestamp,omitempty"`
-	Until      *time.Time `json:"until,omitempty"`
-	Tags       []string   `json:"tags,omitempty"`
-	Note       string     `json:"note,omitempty"`
-	Reference  string     `json:"reference,omitempty"`
-	ProviderID *int64     `json:"providerId,omitempty"`
+	ID         int64
+	Type       EventType
+	Timestamp  *time.Time
+	Until      *time.Time
+	Tags       []string
+	Note       string
+	Reference  string
+	ProviderID *int64
 }
 
 func (e *Event) ToEventResponse() *EventResponse {

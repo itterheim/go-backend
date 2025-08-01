@@ -29,11 +29,7 @@ func (s *LocationService) ListHistory(from, to time.Time) ([]LocationEventRespon
 	for i, event := range data {
 		result[i] = LocationEventResponse{
 			EventResponse: *event.ToEventResponse(),
-			Extras: LocationResponse{
-				Latitude:  event.Extras.Latitude,
-				Longitude: event.Extras.Longitude,
-				Accuracy:  event.Extras.Accuracy,
-			},
+			Extras:        *event.Extras.ToLocationResponse(),
 		}
 	}
 
@@ -48,11 +44,7 @@ func (s *LocationService) GetHistory(id int64) (*LocationEventResponse, error) {
 
 	return &LocationEventResponse{
 		EventResponse: *data.ToEventResponse(),
-		Extras: LocationResponse{
-			Latitude:  data.Extras.Latitude,
-			Longitude: data.Extras.Longitude,
-			Accuracy:  data.Extras.Accuracy,
-		},
+		Extras:        *data.Extras.ToLocationResponse(),
 	}, nil
 }
 
@@ -83,11 +75,8 @@ func (s *LocationService) RegisterHistory(request *CreateLocationEventRequest) (
 
 	return &LocationEventResponse{
 		EventResponse: *event.ToEventResponse(),
-		Extras: LocationResponse{
-			Latitude:  history.Latitude,
-			Longitude: history.Longitude,
-			Accuracy:  history.Accuracy,
-		}}, nil
+		Extras:        *history.ToLocationResponse(),
+	}, nil
 }
 
 func (s *LocationService) UpdateHistory(request *UpdateLocationEventRequest) (*LocationEventResponse, error) {
@@ -117,11 +106,7 @@ func (s *LocationService) UpdateHistory(request *UpdateLocationEventRequest) (*L
 
 	return &LocationEventResponse{
 		EventResponse: *event.ToEventResponse(),
-		Extras: LocationResponse{
-			Latitude:  history.Latitude,
-			Longitude: history.Longitude,
-			Accuracy:  history.Accuracy,
-		},
+		Extras:        *history.ToLocationResponse(),
 	}, nil
 }
 

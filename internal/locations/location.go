@@ -5,10 +5,18 @@ import (
 )
 
 type Location struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Accuracy  float64 `json:"accuracy"`
-	EventID   int64   `json:"eventId"`
+	Latitude  float64
+	Longitude float64
+	Accuracy  float64
+	EventID   int64
+}
+
+func (l *Location) ToLocationResponse() *LocationResponse {
+	return &LocationResponse{
+		Latitude:  l.Latitude,
+		Longitude: l.Longitude,
+		Accuracy:  l.Accuracy,
+	}
 }
 
 type LocationEvent struct {
@@ -16,7 +24,7 @@ type LocationEvent struct {
 	Extras Location
 }
 
-type CreateLocationRequest struct {
+type LocationRequest struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Accuracy  float64 `json:"accuracy"`
@@ -25,19 +33,13 @@ type CreateLocationRequest struct {
 type CreateLocationEventRequest struct {
 	core.CreateEventRequest
 
-	Extras CreateLocationRequest `json:"extras"`
-}
-
-type UpdateLocationRequest struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Accuracy  float64 `json:"accuracy"`
+	Extras LocationRequest `json:"extras"`
 }
 
 type UpdateLocationEventRequest struct {
 	core.UpdateEventRequest
 
-	Extras UpdateLocationRequest `json:"extras"`
+	Extras LocationRequest `json:"extras"`
 }
 
 type LocationResponse struct {
