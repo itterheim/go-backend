@@ -52,7 +52,7 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 
 	// location - history
 	locationRepo := locations.NewLocationRepository(db)
-	locationService := locations.NewLocationService(locationRepo, eventService)
+	locationService := locations.NewLocationService(locationRepo, eventRepo)
 	var locationHandler handler.Handler = locations.NewLocationHandler(locationService)
 	routes = append(routes, locationHandler.GetRoutes()...)
 

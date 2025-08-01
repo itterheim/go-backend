@@ -5,7 +5,6 @@ import (
 )
 
 type Location struct {
-	ID        int64   `json:"id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Accuracy  float64 `json:"accuracy"`
@@ -30,7 +29,6 @@ type CreateLocationEventRequest struct {
 }
 
 type UpdateLocationRequest struct {
-	ID        int64   `json:"id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Accuracy  float64 `json:"accuracy"`
@@ -43,7 +41,6 @@ type UpdateLocationEventRequest struct {
 }
 
 type LocationResponse struct {
-	ID        int64   `json:"id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Accuracy  float64 `json:"accuracy"`
