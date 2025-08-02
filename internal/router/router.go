@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/core"
 	"backend/internal/locations"
+	"backend/internal/raw"
 	"backend/pkg/handler"
 	"net/http"
 	"path/filepath"
@@ -61,6 +62,12 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	placeService := locations.NewPlaceService(placeRepo)
 	var placeHandler handler.Handler = locations.NewPlaceHandler(placeService)
 	routes = append(routes, placeHandler.GetRoutes()...)
+
+	// raw events
+	rawRepo := raw.NewRawRepository(db)
+	rawService := raw.NewRawService(rawRepo, eventRepo)
+	var rawHandler handler.Handler = raw.NewRawHandler(rawService)
+	routes = append(routes, rawHandler.GetRoutes()...)
 
 	for _, route := range routes {
 		var handlerFunc http.Handler = route.HandlerFunc
