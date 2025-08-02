@@ -34,3 +34,5 @@ go.work.sum
 *.key
 *.pem
 **/config.*.yaml
+build.sh
+publish.sh
