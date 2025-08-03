@@ -23,6 +23,8 @@ func main() {
 		return
 	}
 
+	fmt.Println("Connection DB to: ", cfg.Database.Host, cfg.Database.DBName)
+
 	conn, err := db.ConnectPgx(cfg)
 	if err != nil {
 		fmt.Println("Error connecting to database:", err)
@@ -44,6 +46,7 @@ func main() {
 
 	fmt.Println("Starting server on port", cfg.Server.Port)
 	if cfg.Server.SSL {
+		fmt.Println("Server starting with SSL cert.")
 		err = http.ListenAndServeTLS(":"+cfg.Server.Port, "./cert.pem", "./key.pem", router)
 	} else {
 		err = http.ListenAndServe(":"+cfg.Server.Port, router)
