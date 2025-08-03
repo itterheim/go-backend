@@ -35,7 +35,6 @@ CREATE TABLE providers (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    user_id BIGINT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     jti TEXT,
@@ -43,9 +42,6 @@ CREATE TABLE providers (
 );
 
 CREATE UNIQUE INDEX providers_unique_idx ON providers (name);
-CREATE INDEX providers_user_id_idx ON providers (user_id);
-
-ALTER TABLE providers ADD CONSTRAINT fk_providers_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 
 CREATE TRIGGER update_providers_updated BEFORE UPDATE ON providers
 FOR EACH ROW EXECUTE FUNCTION update_updated_column();
