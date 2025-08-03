@@ -28,7 +28,6 @@ func (s *PlaceService) CreatePlace(request *CreatePlaceRequest) (*PlaceResponse,
 		Latitude:  request.Latitude,
 		Longitude: request.Longitude,
 		Radius:    request.Radius,
-		UserID:    request.UserID,
 	})
 	if err != nil {
 		return nil, errors.New("PlaceService.CreatePlace: failed to create place\n" + err.Error())

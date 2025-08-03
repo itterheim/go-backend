@@ -11,7 +11,6 @@ type Place struct {
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	Radius    float64   `json:"radius"`
-	UserID    int64     `json:"-"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
 }
@@ -22,7 +21,6 @@ type CreatePlaceRequest struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Radius    float64 `json:"radius"`
-	UserID    int64   `json:"-"`
 }
 
 type PlaceResponse struct {

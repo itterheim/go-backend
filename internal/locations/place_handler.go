@@ -67,20 +67,12 @@ func (h *PlaceHandler) GetPlace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlaceHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-		return
-	}
-
 	var data CreatePlaceRequest
-	err = h.ParseJSON(r, &data)
+	err := h.ParseJSON(r, &data)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	data.UserID = claims.UserID
 
 	result, err := h.service.CreatePlace(&data)
 	if err != nil {
@@ -97,12 +89,6 @@ func (h *PlaceHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 	}
 
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-		return
-	}
-
 	var data Place
 	err = h.ParseJSON(r, &data)
 	if err != nil {
@@ -111,7 +97,6 @@ func (h *PlaceHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.ID = id
-	data.UserID = claims.UserID
 
 	result, err := h.service.UpdateHistory(&data)
 	if err != nil {
