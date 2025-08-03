@@ -42,23 +42,18 @@ func (h *ProviderHandler) GetProviders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProviderHandler) CreateProvider(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	body := struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
 	}{}
 
-	err = json.NewDecoder(r.Body).Decode(&body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, "invalid provider data\n"+err.Error())
 		return
 	}
 
-	provider, err := h.service.CreateProvider(claims.UserID, body.Name, body.Description)
+	provider, err := h.service.CreateProvider(body.Name, body.Description)
 	if err != nil {
 		// TODO: differentiate between validation errors and general server errors
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
@@ -138,6 +133,12 @@ func (h *ProviderHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	claims, err := h.GetClaimsFromContext(r)
+	if err != nil {
+		h.SendJSON(w, http.StatusForbidden, err.Error())
+		return
+	}
+
 	// lifespan in days
 	var body struct {
 		Lifespan int `json:"lifespan"`
@@ -150,7 +151,7 @@ func (h *ProviderHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 
 	lifespan := time.Hour * 24 * time.Duration(body.Lifespan)
 
-	token, err := h.service.CreateToken(providerId, lifespan)
+	token, err := h.service.CreateToken(claims.UserID, providerId, lifespan)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

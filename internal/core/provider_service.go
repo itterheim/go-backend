@@ -28,12 +28,12 @@ func (s *ProviderService) GetProvider(id int64) (*Provider, error) {
 	return s.providerRepo.GetById(id)
 }
 
-func (s *ProviderService) CreateProvider(userID int64, name string, description string) (*Provider, error) {
+func (s *ProviderService) CreateProvider(name string, description string) (*Provider, error) {
 	if len(name) == 0 {
 		return nil, errors.New("provider.name cannot be empty")
 	}
 
-	return s.providerRepo.Create(userID, name, description)
+	return s.providerRepo.Create(name, description)
 }
 
 func (s *ProviderService) UpdateProvider(id int64, name string, description string) (*Provider, error) {
@@ -52,9 +52,10 @@ func (s *ProviderService) DeleteProvider(providerId int64) error {
 	return s.providerRepo.Delete(providerId)
 }
 
-func (s *ProviderService) CreateToken(providerId int64, lifespan time.Duration) (string, error) {
+func (s *ProviderService) CreateToken(userId, providerId int64, lifespan time.Duration) (string, error) {
 	claims := jwt.Claims{
-		UserID:     providerId,
+		UserID:     userId,
+		ProviderID: &providerId,
 		Expiration: time.Now().Add(lifespan),
 		JTI:        uuid.New().String(),
 		Type:       jwt.ProviderClaim,

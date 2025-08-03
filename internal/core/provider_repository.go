@@ -45,7 +45,7 @@ func (r *ProviderRepository) GetById(id int64) (*Provider, error) {
 	return provider, nil
 }
 
-func (r *ProviderRepository) Create(userID int64, name, description string) (*Provider, error) {
+func (r *ProviderRepository) Create(name, description string) (*Provider, error) {
 	provider := &Provider{}
 
 	err := r.db.QueryRow(context.Background(), `
