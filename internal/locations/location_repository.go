@@ -1,8 +1,10 @@
 package locations
 
 import (
+	"backend/internal/core"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,15 +21,19 @@ func NewLocationRepository(db *pgxpool.Pool) *LocationRepository {
 	return &LocationRepository{db}
 }
 
-func (r *LocationRepository) ListHistory() ([]LocationEvent, error) {
-	rows, err := r.db.Query(context.Background(), `
+func (r *LocationRepository) ListHistory(queryBuilder *core.EventQueryBuilder) ([]LocationEvent, error) {
+	where, params := queryBuilder.Build()
+	query := fmt.Sprintf(`
 		SELECT
 		    events.id as e_id, type, timestamp, until, tags, note, reference,
 			event_id, latitude, longitude, accuracy
 		FROM locations_history
 		INNER JOIN events ON locations_history.event_id = events.id
+		%s
 		ORDER BY timestamp ASC
-	`)
+	`, where)
+
+	rows, err := r.db.Query(context.Background(), query, params...)
 	if err != nil {
 		return nil, err
 	}

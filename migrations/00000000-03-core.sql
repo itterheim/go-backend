@@ -21,13 +21,13 @@ ALTER TABLE events ADD CONSTRAINT fk_events_provider_id FOREIGN KEY (provider_id
 
 -- tags
 CREATE TABLE tags (
-    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    tag TEXT NOT NULL,
+    tag TEXT PRIMARY KEY,
     description TEXT,
-    parent_id BIGINT
+    parent TEXT,
+    private BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX tags_tag_trgm ON tags USING GIN(tag gin_trgm_ops);
-CREATE INDEX tags_parent_id ON tags (parent_id);
+CREATE INDEX tags_parent ON tags (parent);
 
-ALTER TABLE tags ADD CONSTRAINT fk_tags_parent_id FOREIGN KEY (parent_id) REFERENCES tags (id) ON DELETE SET NULL;
+ALTER TABLE tags ADD CONSTRAINT fk_tags_parent FOREIGN KEY (parent) REFERENCES tags (tag) ON DELETE SET NULL ON UPDATE CASCADE;

@@ -3,7 +3,6 @@ package core
 import (
 	"backend/pkg/handler"
 	"net/http"
-	"time"
 )
 
 type EventHandler struct {
@@ -27,11 +26,13 @@ func (h *EventHandler) GetRoutes() []handler.Route {
 }
 
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
-	// TODO: read from query string
-	from := time.UnixMilli(0)
-	to := time.Now()
+	query := &EventQueryBuilder{}
+	err := query.FromRequest(r)
+	if err != nil {
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
+	}
 
-	data, err := h.service.ListEvents(from, to)
+	data, err := h.service.ListEvents(query)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

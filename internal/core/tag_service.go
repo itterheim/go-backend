@@ -8,12 +8,12 @@ func NewTagService(repo *TagRepository) *TagService {
 	return &TagService{repo}
 }
 
-func (s *TagService) ListTags() ([]Tag, error) {
-	return s.repo.ListTags()
+func (s *TagService) ListTags(private bool) ([]Tag, error) {
+	return s.repo.ListTags(private)
 }
 
-func (s *TagService) GetTag(id int64) (*Tag, error) {
-	return s.repo.GetTag(id)
+func (s *TagService) GetTag(tag string) (*Tag, error) {
+	return s.repo.GetTag(tag)
 }
 
 func (s *TagService) CreateTag(data *CreateTagRequest) (*Tag, error) {
@@ -32,10 +32,9 @@ func (s *TagService) CreateTag(data *CreateTagRequest) (*Tag, error) {
 func (s *TagService) UpdateTag(data *UpdateTagRequest) (*Tag, error) {
 	// TODO: find and update parent based on tag string
 	tag, err := s.repo.UpdateTag(&Tag{
-		ID:          data.ID,
 		Tag:         data.Tag,
 		Description: data.Description,
-	})
+	}, data.NewTag)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +42,6 @@ func (s *TagService) UpdateTag(data *UpdateTagRequest) (*Tag, error) {
 	return tag, nil
 }
 
-func (s *TagService) DeleteTag(id int64) error {
-	return s.repo.DeleteTag(id)
+func (s *TagService) DeleteTag(tag string) error {
+	return s.repo.DeleteTag(tag)
 }

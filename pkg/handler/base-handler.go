@@ -46,23 +46,36 @@ func (h *BaseHandler) GetAuthIdsFromContext(r *http.Request) (int64, *int64, err
 	return claims.UserID, claims.ProviderID, nil
 }
 
-// Parse in64 id form the request path
+// Get string key from the request path
+func (h *BaseHandler) GetStringFromPath(r *http.Request, key string) (string, error) {
+	value := r.PathValue(key)
+	if len(value) == 0 {
+		return "", fmt.Errorf("invalid route key \"%s\" ", key)
+	}
+
+	return value, nil
+}
+
+// Parse in64 key form the request path
 func (h *BaseHandler) GetInt64FromPath(r *http.Request, key string) (int64, error) {
-	id := r.PathValue("id")
+	id := r.PathValue(key)
 	if len(id) == 0 {
-		return 0, errors.New("invalid provider id")
+		return 0, fmt.Errorf("invalid route key \"%s\" ", key)
 	}
 
-	providerId, err := strconv.ParseInt(id, 10, 64)
+	value, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return 0, errors.New("invalid provider id")
+		return 0, fmt.Errorf("invalid route key \"%s\" ", key)
 	}
 
-	return providerId, nil
+	return value, nil
 }
 
 // respondWithJSON writes the given data as JSON response with the specified status code.
 func (h *BaseHandler) SendJSON(w http.ResponseWriter, statusCode int, data any) {
+	if statusCode >= 400 {
+		fmt.Println("ERROR:", data)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)

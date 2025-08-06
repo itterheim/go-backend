@@ -1,9 +1,9 @@
 package locations
 
 import (
+	"backend/internal/core"
 	"backend/pkg/handler"
 	"net/http"
-	"time"
 )
 
 type LocationHandler struct {
@@ -27,11 +27,14 @@ func (h *LocationHandler) GetRoutes() []handler.Route {
 }
 
 func (h *LocationHandler) ListHistory(w http.ResponseWriter, r *http.Request) {
-	// TODO: read from query string
-	from := time.UnixMilli(0)
-	to := time.Now()
+	query := &core.EventQueryBuilder{}
+	err := query.FromRequest(r)
+	if err != nil {
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-	data, err := h.service.ListHistory(from, to)
+	data, err := h.service.ListHistory(query)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

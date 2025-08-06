@@ -1,11 +1,10 @@
 package core
 
 type Tag struct {
-	ID          int64  `json:"id"`
-	Tag         string `json:"tag"`
-	Description string `json:"description,omitempty"`
-	ParentID    *int64 `json:"parentId,omitempty"`
-	Private     bool   `json:"private"`
+	Tag         string  `json:"tag"`
+	Description string  `json:"description,omitempty"`
+	Parent      *string `json:"parent,omitempty"`
+	Private     bool    `json:"private"`
 }
 
 type CreateTagRequest struct {
@@ -15,8 +14,8 @@ type CreateTagRequest struct {
 }
 
 type UpdateTagRequest struct {
-	ID          int64  `json:"-"`
-	Tag         string `json:"tag"`
-	Description string `json:"description"`
-	Private     bool   `json:"private"`
+	Tag         string  `json:"tag"`
+	NewTag      *string `json:"newTag,omitempty"`
+	Description string  `json:"description"`
+	Private     bool    `json:"private"`
 }

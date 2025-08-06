@@ -16,11 +16,12 @@ func NewTagRepository(db *pgxpool.Pool) *TagRepository {
 	return &TagRepository{db}
 }
 
-func (r *TagRepository) ListTags() ([]Tag, error) {
+func (r *TagRepository) ListTags(private bool) ([]Tag, error) {
 	rows, err := r.db.Query(context.Background(), `
-		SELECT id, tag, description, parent_id
+		SELECT tag, description, parent, private
 		FROM tags
-	`)
+		WHERE $1 OR private
+	`, private)
 	if err != nil {
 		return nil, err
 	}
@@ -29,10 +30,10 @@ func (r *TagRepository) ListTags() ([]Tag, error) {
 	for rows.Next() {
 		var tag Tag
 		err = rows.Scan(
-			&tag.ID,
 			&tag.Tag,
 			&tag.Description,
-			&tag.ParentID,
+			&tag.Parent,
+			&tag.Private,
 		)
 		if err != nil {
 			return nil, err
@@ -43,17 +44,17 @@ func (r *TagRepository) ListTags() ([]Tag, error) {
 	return tags, nil
 }
 
-func (r *TagRepository) GetTag(id int64) (*Tag, error) {
-	var tag Tag
+func (r *TagRepository) GetTag(tag string) (*Tag, error) {
+	var result Tag
 	err := r.db.QueryRow(context.Background(), `
-		SELECT id, tag, description, parent_id
+		SELECT tag, description, parent, private
 		FROM tags
-		WHERE id = $1
-	`, id).Scan(
-		&tag.ID,
-		&tag.Tag,
-		&tag.Description,
-		&tag.ParentID,
+		WHERE tag = $1
+	`, tag).Scan(
+		&result.Tag,
+		&result.Description,
+		&result.Parent,
+		&result.Private,
 	)
 	if err == pgx.ErrNoRows {
 		return nil, nil
@@ -62,45 +63,49 @@ func (r *TagRepository) GetTag(id int64) (*Tag, error) {
 		return nil, err
 	}
 
-	return &tag, nil
+	return &result, nil
 }
 
 func (r *TagRepository) CreateTag(data *Tag) (*Tag, error) {
-	var id int64 = 0
+	var tag string
 	err := r.db.QueryRow(context.Background(), `
-		INSERT INTO tags (tag, description, parent_id)
-		VALUES ($1, $2, $3)
-		RETURNING id
-	`, data.Tag, data.Description, data.ParentID).Scan(&id)
+		INSERT INTO tags (tag, description, parent, private)
+		VALUES ($1, $2, $3, $4)
+		RETURNING tag
+	`, data.Tag, data.Description, data.Parent, data.Private).Scan(&tag)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.GetTag(id)
+	return r.GetTag(tag)
 }
 
-func (r *TagRepository) UpdateTag(data *Tag) (*Tag, error) {
-	var id int64
+func (r *TagRepository) UpdateTag(data *Tag, rename *string) (*Tag, error) {
+	newTag := data.Tag
+	if rename != nil {
+		newTag = *rename
+	}
+	var tag string
 	err := r.db.QueryRow(context.Background(), `
 		UPDATE tags
 		SET tag = $2,
 			description = $3,
-			parent_id = $4
-		WHERE id = $1
-		RETURNING id
-	`, &data.ID, &data.Tag, &data.Description, &data.ParentID).Scan(&id)
+			parent = $4
+		WHERE tag = $1
+		RETURNING tag
+	`, &data.Tag, newTag, &data.Description, &data.Parent).Scan(&tag)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.GetTag(id)
+	return r.GetTag(tag)
 }
 
-func (r *TagRepository) DeleteTag(id int64) error {
+func (r *TagRepository) DeleteTag(tag string) error {
 	cmd, err := r.db.Exec(context.Background(), `
 		DELETE FROM tags
-		WHERE id = $1
-	`, id)
+		WHERE tag = $1
+	`, tag)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -15,8 +16,9 @@ func NewEventRepository(db *pgxpool.Pool) *EventRepository {
 	return &EventRepository{db: db}
 }
 
-func (r *EventRepository) ListEvents() ([]Event, error) {
-	rows, err := r.db.Query(context.Background(), `
+func (r *EventRepository) ListEvents(queryBuilder *EventQueryBuilder) ([]Event, error) {
+	where, params := queryBuilder.Build()
+	query := fmt.Sprintf(`
 		SELECT
 			id,
 			type,
@@ -27,8 +29,13 @@ func (r *EventRepository) ListEvents() ([]Event, error) {
 			reference,
 			provider_id
 		FROM events
+		%s
 		ORDER BY timestamp ASC
-	`)
+	`, where)
+	fmt.Println(query)
+	fmt.Println(params)
+
+	rows, err := r.db.Query(context.Background(), query, params...)
 
 	if err != nil {
 		return nil, err

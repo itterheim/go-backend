@@ -12,12 +12,12 @@ func NewPlaceService(placeRepo *PlaceRepository) *PlaceService {
 	return &PlaceService{placeRepo}
 }
 
-func (s *PlaceService) ListPlaces(userID int64) ([]Place, error) {
-	return s.placeRepo.ListPlaces(userID)
+func (s *PlaceService) ListPlaces() ([]Place, error) {
+	return s.placeRepo.ListPlaces()
 }
 
-func (s *PlaceService) GetPlace(id, userID int64) (*Place, error) {
-	return s.placeRepo.GetPlace(id, userID)
+func (s *PlaceService) GetPlace(id int64) (*Place, error) {
+	return s.placeRepo.GetPlace(id)
 }
 
 func (s *PlaceService) CreatePlace(request *CreatePlaceRequest) (*PlaceResponse, error) {
@@ -49,6 +49,6 @@ func (s *PlaceService) UpdateHistory(data *Place) (*Place, error) {
 	return s.placeRepo.UpdatePlace(data)
 }
 
-func (s *PlaceService) DeleteHistory(id, updateID int64) error {
-	return s.placeRepo.DeletePlace(id, updateID)
+func (s *PlaceService) DeleteHistory(id int64) error {
+	return s.placeRepo.DeletePlace(id)
 }

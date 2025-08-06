@@ -26,14 +26,9 @@ func (h *PlaceHandler) GetRoutes() []handler.Route {
 }
 
 func (h *PlaceHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
+	data, err := h.service.ListPlaces()
 	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
-	data, err := h.service.ListPlaces(claims.UserID)
-	if err != nil {
-		h.SendJSON(w, http.StatusInternalServerError, err)
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -41,18 +36,13 @@ func (h *PlaceHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlaceHandler) GetPlace(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	data, err := h.service.GetPlace(id, claims.UserID)
+	data, err := h.service.GetPlace(id)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -108,18 +98,13 @@ func (h *PlaceHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlaceHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
-	claims, err := h.GetClaimsFromContext(r)
-	if err != nil {
-		h.SendJSON(w, http.StatusForbidden, err.Error())
-	}
-
 	id, err := h.GetInt64FromPath(r, "id")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = h.service.DeleteHistory(id, claims.UserID)
+	err = h.service.DeleteHistory(id)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

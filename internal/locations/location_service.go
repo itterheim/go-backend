@@ -4,7 +4,6 @@ import (
 	"backend/internal/core"
 	"errors"
 	"fmt"
-	"time"
 )
 
 type LocationService struct {
@@ -19,8 +18,8 @@ func NewLocationService(locationRepo *LocationRepository, eventRepo *core.EventR
 	}
 }
 
-func (s *LocationService) ListHistory(from, to time.Time) ([]LocationEventResponse, error) {
-	data, err := s.locationRepo.ListHistory()
+func (s *LocationService) ListHistory(query *core.EventQueryBuilder) ([]LocationEventResponse, error) {
+	data, err := s.locationRepo.ListHistory(query)
 	if err != nil {
 		return nil, err
 	}

@@ -18,15 +18,17 @@ func NewTagHandler(service *TagService) *TagHandler {
 func (h *TagHandler) GetRoutes() []handler.Route {
 	return []handler.Route{
 		handler.NewRoute("GET /api/core/tags/{$}", h.ListTags, handler.RouteOwnerRole),
-		handler.NewRoute("GET /api/core/tags/{id}", h.GetTag, handler.RouteOwnerRole),
+		handler.NewRoute("GET /api/core/tags/{tag}", h.GetTag, handler.RouteOwnerRole),
 		handler.NewRoute("POST /api/core/tags", h.CreateTag, handler.RouteOwnerRole),
-		handler.NewRoute("PUT /api/core/tags/{id}", h.UpdateTag, handler.RouteOwnerRole),
-		handler.NewRoute("DELETE /api/core/tags/{id}", h.DeleteTag, handler.RouteOwnerRole),
+		handler.NewRoute("PUT /api/core/tags/{tag}", h.UpdateTag, handler.RouteOwnerRole),
+		handler.NewRoute("DELETE /api/core/tags/{tag}", h.DeleteTag, handler.RouteOwnerRole),
 	}
 }
 
 func (h *TagHandler) ListTags(w http.ResponseWriter, r *http.Request) {
-	tags, err := h.service.ListTags()
+	private := r.URL.Query().Has("private")
+
+	tags, err := h.service.ListTags(private)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -36,7 +38,7 @@ func (h *TagHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TagHandler) GetTag(w http.ResponseWriter, r *http.Request) {
-	id, err := h.GetInt64FromPath(r, "id")
+	id, err := h.GetStringFromPath(r, "tag")
 	if err != nil {
 		h.SendJSON(w, http.StatusBadRequest, err.Error())
 	}
@@ -71,7 +73,7 @@ func (h *TagHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
-	id, err := h.GetInt64FromPath(r, "id")
+	tag, err := h.GetStringFromPath(r, "tag")
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
@@ -84,7 +86,7 @@ func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body.ID = id
+	body.Tag = tag
 
 	result, err := h.service.UpdateTag(&body)
 	if err != nil {
@@ -96,13 +98,13 @@ func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TagHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
-	id, err := h.GetInt64FromPath(r, "id")
+	tag, err := h.GetStringFromPath(r, "tag")
 	if err != nil {
 		h.SendJSON(w, http.StatusForbidden, err.Error())
 		return
 	}
 
-	err = h.service.DeleteTag(id)
+	err = h.service.DeleteTag(tag)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
 		return

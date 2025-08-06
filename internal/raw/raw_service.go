@@ -14,8 +14,8 @@ func NewRawService(rawRepo *RawRepository, eventRepo *core.EventRepository) *Raw
 	return &RawService{rawRepo, eventRepo}
 }
 
-func (s *RawService) ListRawEvents() ([]RawEventResponse, error) {
-	data, err := s.rawRepo.ListRawEvents()
+func (s *RawService) ListRawEvents(query *core.EventQueryBuilder) ([]RawEventResponse, error) {
+	data, err := s.rawRepo.ListRawEvents(query)
 	if err != nil {
 		return nil, fmt.Errorf("RawService.ListRawEvents: %v", err)
 	}

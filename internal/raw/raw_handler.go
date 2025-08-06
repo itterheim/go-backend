@@ -1,6 +1,7 @@
 package raw
 
 import (
+	"backend/internal/core"
 	"backend/pkg/handler"
 	"net/http"
 )
@@ -25,11 +26,17 @@ func (h *RawHandler) GetRoutes() []handler.Route {
 }
 
 func (h *RawHandler) ListRawEvents(w http.ResponseWriter, r *http.Request) {
-	// TODO: query string filters
+	query := &core.EventQueryBuilder{}
+	err := query.FromRequest(r)
+	if err != nil {
+		h.SendJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-	data, err := h.service.ListRawEvents()
+	data, err := h.service.ListRawEvents(query)
 	if err != nil {
 		h.SendJSON(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	h.SendJSON(w, http.StatusOK, data)

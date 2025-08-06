@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"time"
 )
 
 type EventService struct {
@@ -13,8 +12,8 @@ func NewEventService(repo *EventRepository) *EventService {
 	return &EventService{repo: repo}
 }
 
-func (s *EventService) ListEvents(from, to time.Time) ([]EventResponse, error) {
-	events, err := s.repo.ListEvents()
+func (s *EventService) ListEvents(query *EventQueryBuilder) ([]EventResponse, error) {
+	events, err := s.repo.ListEvents(query)
 	if err != nil {
 		return nil, err
 	}
