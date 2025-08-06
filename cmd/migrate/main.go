@@ -102,6 +102,12 @@ func main() {
 		fmt.Println("Error creating user:", err)
 		return
 	}
+
+	err = createPrivateTag(conn)
+	if err != nil {
+		fmt.Println("Error creating private:", err)
+		return
+	}
 }
 
 func nukeDatabase(conn *pgxpool.Pool) error {
@@ -291,5 +297,28 @@ func createUser(conn *pgxpool.Pool, username, password string, config *config.Co
 	}
 
 	fmt.Println("User created:", user.ID)
+	return nil
+}
+
+func createPrivateTag(conn *pgxpool.Pool) error {
+	tagRepo := core.NewTagRepository(conn)
+
+	tag, err := tagRepo.GetTag("private")
+	if tag != nil {
+		fmt.Println("Private tag already exists")
+		return nil
+	}
+
+	tag, err = tagRepo.CreateTag(&core.Tag{
+		Tag:     "private",
+		Private: true,
+	})
+	if err != nil {
+		fmt.Println("Error creating private tag:", err.Error())
+		return err
+	}
+
+	fmt.Println("Private tag created:", tag)
+
 	return nil
 }
