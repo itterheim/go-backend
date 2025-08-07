@@ -1,26 +1,28 @@
 package core
 
 type TagService struct {
-	repo *TagRepository
+	tagRepo   *TagRepository
+	eventRepo *EventRepository
 }
 
-func NewTagService(repo *TagRepository) *TagService {
-	return &TagService{repo}
+func NewTagService(tagRepo *TagRepository, eventRepo *EventRepository) *TagService {
+	return &TagService{tagRepo, eventRepo}
 }
 
 func (s *TagService) ListTags(private bool) ([]Tag, error) {
-	return s.repo.ListTags(private)
+	return s.tagRepo.ListTags(private)
 }
 
 func (s *TagService) GetTag(tag string) (*Tag, error) {
-	return s.repo.GetTag(tag)
+	return s.tagRepo.GetTag(tag)
 }
 
 func (s *TagService) CreateTag(data *CreateTagRequest) (*Tag, error) {
 	// TODO: find parent based on tag string
-	tag, err := s.repo.CreateTag(&Tag{
+	tag, err := s.tagRepo.CreateTag(&Tag{
 		Tag:         data.Tag,
 		Description: data.Description,
+		Private:     data.Private,
 	})
 	if err != nil {
 		return nil, err
@@ -31,9 +33,10 @@ func (s *TagService) CreateTag(data *CreateTagRequest) (*Tag, error) {
 
 func (s *TagService) UpdateTag(data *UpdateTagRequest) (*Tag, error) {
 	// TODO: find and update parent based on tag string
-	tag, err := s.repo.UpdateTag(&Tag{
+	tag, err := s.tagRepo.UpdateTag(&Tag{
 		Tag:         data.Tag,
 		Description: data.Description,
+		Private:     data.Private,
 	}, data.NewTag)
 	if err != nil {
 		return nil, err
@@ -43,5 +46,16 @@ func (s *TagService) UpdateTag(data *UpdateTagRequest) (*Tag, error) {
 }
 
 func (s *TagService) DeleteTag(tag string) error {
-	return s.repo.DeleteTag(tag)
+	return s.tagRepo.DeleteTag(tag)
+}
+
+func (s *TagService) SynchronizeTags() error {
+	tags, err := s.eventRepo.UsedTags()
+	if err != nil {
+		return err
+	}
+
+	err = s.tagRepo.SynchronizeTags(tags)
+
+	return err
 }

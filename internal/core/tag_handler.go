@@ -22,6 +22,7 @@ func (h *TagHandler) GetRoutes() []handler.Route {
 		handler.NewRoute("POST /api/core/tags", h.CreateTag, handler.RouteOwnerRole),
 		handler.NewRoute("PUT /api/core/tags/{tag}", h.UpdateTag, handler.RouteOwnerRole),
 		handler.NewRoute("DELETE /api/core/tags/{tag}", h.DeleteTag, handler.RouteOwnerRole),
+		handler.NewRoute("POST /api/core/tags/sync", h.SyncTags, handler.RouteOwnerRole),
 	}
 }
 
@@ -111,4 +112,14 @@ func (h *TagHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.SendJSON(w, http.StatusAccepted, nil)
+}
+
+func (h *TagHandler) SyncTags(w http.ResponseWriter, r *http.Request) {
+	err := h.service.SynchronizeTags()
+	if err != nil {
+		h.SendJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.SendJSON(w, http.StatusOK, nil)
 }

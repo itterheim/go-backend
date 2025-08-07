@@ -30,12 +30,14 @@ type Event struct {
 
 func (e *Event) ToEventResponse() *EventResponse {
 	return &EventResponse{
-		ID:        e.ID,
-		Type:      e.Type,
-		Timestamp: e.Timestamp,
-		Until:     e.Until,
-		Tags:      e.Tags,
-		Note:      e.Note,
+		ID:         e.ID,
+		Type:       e.Type,
+		Timestamp:  e.Timestamp,
+		Until:      e.Until,
+		Tags:       e.Tags,
+		Note:       e.Note,
+		Reference:  e.Reference,
+		ProviderID: e.ProviderID,
 	}
 }
 
@@ -97,12 +99,14 @@ func (e *UpdateEventRequest) ToEvent() *Event {
 }
 
 type EventResponse struct {
-	ID        int64      `json:"id"`
-	Type      EventType  `json:"type"`
-	Timestamp *time.Time `json:"timestamp,omitempty"`
-	Until     *time.Time `json:"until,omitempty"`
-	Tags      []string   `json:"tags,omitempty"`
-	Note      string     `json:"note,omitempty"`
+	ID         int64      `json:"id"`
+	Type       EventType  `json:"type"`
+	Timestamp  *time.Time `json:"timestamp,omitempty"`
+	Until      *time.Time `json:"until,omitempty"`
+	Tags       []string   `json:"tags,omitempty"`
+	Note       string     `json:"note,omitempty"`
+	Reference  string     `json:"reference"`
+	ProviderID *int64     `json:"providerId,omitempty"`
 }
 
 type EventQueryBuilder struct {

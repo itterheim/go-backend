@@ -47,7 +47,7 @@ func NewRouter(db *pgxpool.Pool, config *config.AuthConfig) *http.ServeMux {
 	routes = append(routes, eventHandler.GetRoutes()...)
 
 	// tags
-	tagService := core.NewTagService(tagRepo)
+	tagService := core.NewTagService(tagRepo, eventRepo)
 	var tagHandler handler.Handler = core.NewTagHandler(tagService)
 	routes = append(routes, tagHandler.GetRoutes()...)
 

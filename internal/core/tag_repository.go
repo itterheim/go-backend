@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,7 +21,8 @@ func (r *TagRepository) ListTags(private bool) ([]Tag, error) {
 	rows, err := r.db.Query(context.Background(), `
 		SELECT tag, description, parent, private
 		FROM tags
-		WHERE $1 OR private
+		WHERE $1 OR NOT private
+		ORDER BY tag ASC
 	`, private)
 	if err != nil {
 		return nil, err
@@ -90,10 +92,11 @@ func (r *TagRepository) UpdateTag(data *Tag, rename *string) (*Tag, error) {
 		UPDATE tags
 		SET tag = $2,
 			description = $3,
-			parent = $4
+			parent = $4,
+			private = $5
 		WHERE tag = $1
 		RETURNING tag
-	`, &data.Tag, newTag, &data.Description, &data.Parent).Scan(&tag)
+	`, &data.Tag, newTag, &data.Description, &data.Parent, &data.Private).Scan(&tag)
 	if err != nil {
 		return nil, err
 	}
@@ -114,5 +117,19 @@ func (r *TagRepository) DeleteTag(tag string) error {
 		return errors.New("TagRepository.DeleteTag: no rows affected")
 	}
 
+	return nil
+}
+
+func (r *TagRepository) SynchronizeTags(tags []string) error {
+	cmd, err := r.db.Exec(context.Background(), `
+		INSERT INTO tags (tag)
+		SELECT unnest($1::TEXT[])
+		ON CONFLICT (tag) DO NOTHING;
+	`, tags)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(cmd.RowsAffected())
 	return nil
 }

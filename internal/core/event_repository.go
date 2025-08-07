@@ -138,3 +138,25 @@ func (r *EventRepository) DeleteEvent(id int64) error {
 
 	return nil
 }
+
+func (r *EventRepository) UsedTags() ([]string, error) {
+	rows, err := r.db.Query(context.Background(), `
+		SELECT DISTINCT unnest(tags) AS unique_tag FROM events;
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0)
+	for rows.Next() {
+		tag := ""
+		err = rows.Scan(&tag)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, tag)
+	}
+
+	return result, nil
+}
